@@ -108,6 +108,7 @@ $poisForm.addEventListener('submit', function (event) {
 
 $poisDesktopForm.addEventListener('submit', function (event) {
   event.preventDefault();
+  data.eventTarget = event.target.id;
   getPOIs(event);
   $poisDesktopForm.reset();
   $poisMenuDesktop.style.display = 'none';
@@ -369,5 +370,20 @@ function getBestRouteDestinationAJAXRequest(event) {
 }
 
 function getPOIs(event) {
+  var bufferDistance;
+  if (data.eventTarget === 'pois-form') {
+    bufferDistance = event.target.elements.buffer.value;
+  } else {
+    bufferDistance = event.target.elements['buffer-desktop'].value;
+  }
+  var requestBody = { request: 'pois', geometry: { geojson: { type: 'Point', coordinates: [data.longitude, data.latitude] }, buffer: bufferDistance } };
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', 'https://api.openrouteservice.org/pois');
+  xhr.setRequestHeader('authorization', '5b3ce3597851110001cf62489e44bfb8d57d4a17b815aa9f855e19da');
+  xhr.setRequestHeader('content-type', 'application/json;charset=UTF-8');
+  xhr.responseType = 'json';
+  xhr.addEventListener('load', function () {
 
+  });
+  xhr.send(JSON.stringify(requestBody));
 }
