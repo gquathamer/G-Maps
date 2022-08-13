@@ -119,6 +119,22 @@ button {
   display: none;
 }
 
+#pois-menu {
+  display: none;
+}
+
+#pois-form {
+  display: none;
+}
+
+#pois-menu-desktop {
+  display: none;
+}
+
+#pois-form-desktop {
+  display: none;
+}
+
 .popup-div {
   margin: 0;
   padding: 0;

@@ -4,6 +4,6 @@ var data = {
   latitude: null,
   longitude: null,
   elevation: null,
-  geoJson: null,
+  geoJSON: null,
   eventTarget: null
 };
