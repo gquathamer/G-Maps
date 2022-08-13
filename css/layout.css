@@ -27,7 +27,7 @@ body,
   justify-content: start;
 }
 
-#geocode-map-form {
+#geocode-desktop-form {
   display: none;
 }
 
@@ -56,7 +56,7 @@ body,
     justify-content: center;
   }
 
-  #geocode-map-form {
+  #geocode-desktop-form {
     display: block;
   }
 

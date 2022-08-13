@@ -24,7 +24,7 @@ body {
 
 .bar-container {
   border-radius: 10px;
-  border: white solid 1px;
+  border: white solid 2px;
   padding: 0.5rem;
 }
 
@@ -96,7 +96,7 @@ button {
   background-color: #5fd068;
   border-radius: 10px;
   font-family: roboto, "open sans", sans-serif;
-  width: 15%;
+  padding: 0.25rem;
 }
 
 .bottom-margin {
@@ -112,6 +112,10 @@ button {
 }
 
 #reverse-geocode-form {
+  display: none;
+}
+
+#reverse-geocode-form-desktop {
   display: none;
 }
 
@@ -135,7 +139,7 @@ button {
   width: 40%;
 }
 
-#geocode-map-form {
+#geocode-desktop-form {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -143,7 +147,7 @@ button {
   width: 40%;
 }
 
-#geocode-map-form input {
+#geocode-desktop-form input {
   background-color: white;
   border-radius: 10px;
   padding: 5px;
@@ -152,4 +156,29 @@ button {
     "open sans",
     sans-serif;
   width: 100%;
+}
+
+#directions-menu {
+  display: none;
+}
+
+#directions-form {
+  display: none;
+}
+
+#directions-menu-desktop {
+  display: none;
+}
+
+#directions-form-desktop {
+  display: none;
+}
+
+.directions-button {
+  background-color: #5fd068;
+  border-radius: 10px;
+  font-family:
+    roboto,
+    "open sans",
+    sans-serif;
 }
