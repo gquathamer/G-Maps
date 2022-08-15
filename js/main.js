@@ -100,6 +100,7 @@ $directionsDesktopForm.addEventListener('submit', function (event) {
 
 $poisForm.addEventListener('submit', function (event) {
   event.preventDefault();
+  data.eventTarget = event.target.id;
   getPOIs(event);
   $poisForm.reset();
   $poisMenu.style.display = 'none';
@@ -221,6 +222,10 @@ function displayPopupContent() {
     toggleFormContainer();
   } else if (data.eventTarget === 'reverse-geocode-form') {
     toggleFormContainer();
+  } else if (data.eventTarget === 'directions-form') {
+    toggleFormContainer();
+  } else if (data.eventTarget === 'pois-form') {
+    toggleFormContainer();
   }
   markupLayer.openPopup();
   $directionsButtonOnThePopup = document.querySelector('#directions-button');
@@ -338,6 +343,7 @@ function getReverseGeocode(event) {
 }
 
 function getBestRouteDestinationAJAXRequest(event) {
+  data.eventTarget = event.target.id;
   if (data.eventTarget === 'directions-form') {
     data.address = $directionsForm.elements.destination.value;
   } else {
@@ -359,9 +365,9 @@ function getBestRouteDestinationAJAXRequest(event) {
       map.fitBounds(markupLayer.getBounds());
       var routeCoordinates = response.features[0].geometry.coordinates;
       // eslint-disable-next-line no-undef
-      markupLayer.addData(L.marker([routeCoordinates[0][1], routeCoordinates[0][0]]).toGeoJSON());
+      markupLayer.addData(L.marker([routeCoordinates[0][1], routeCoordinates[0][0]], { color: green }).toGeoJSON());
       // eslint-disable-next-line no-undef
-      markupLayer.addData(L.marker([routeCoordinates[routeCoordinates.length - 1][1], routeCoordinates[routeCoordinates.length - 1][0]]).toGeoJSON());
+      markupLayer.addData(L.marker([routeCoordinates[routeCoordinates.length - 1][1], routeCoordinates[routeCoordinates.length - 1][0]], { color: red }).toGeoJSON());
     });
     if (data.eventTarget === 'directions-form') {
       toggleFormContainer();
@@ -371,19 +377,52 @@ function getBestRouteDestinationAJAXRequest(event) {
 
 function getPOIs(event) {
   var bufferDistance;
+  data.eventTarget = event.target.id;
   if (data.eventTarget === 'pois-form') {
     bufferDistance = event.target.elements.buffer.value;
   } else {
     bufferDistance = event.target.elements['buffer-desktop'].value;
   }
-  var requestBody = { request: 'pois', geometry: { geojson: { type: 'Point', coordinates: [data.longitude, data.latitude] }, buffer: bufferDistance } };
+  var requestBody = {
+    request: 'pois',
+    geometry: {
+      geojson: {
+        type: 'Point',
+        coordinates: [data.longitude, data.latitude]
+      },
+      buffer: bufferDistance
+    }
+  };
   var xhr = new XMLHttpRequest();
   xhr.open('POST', 'https://api.openrouteservice.org/pois');
   xhr.setRequestHeader('authorization', '5b3ce3597851110001cf62489e44bfb8d57d4a17b815aa9f855e19da');
   xhr.setRequestHeader('content-type', 'application/json;charset=UTF-8');
   xhr.responseType = 'json';
   xhr.addEventListener('load', function () {
-
+    var poisArray = xhr.response.features;
+    var markersArray = [];
+    poisArray.forEach(element => {
+      // eslint-disable-next-line no-undef
+      var marker = L.marker([element.geometry.coordinates[1], element.geometry.coordinates[0]]);
+      var osmID = Object.keys(element.properties.category_ids);
+      var poiName;
+      if (element.properties.osm_tags) {
+        poiName = element.properties.osm_tags.name;
+      } else {
+        poiName = 'Name not found!';
+      }
+      marker.bindPopup(`
+        <p>POI category: ${element.properties.category_ids[osmID[0]].category_name}</p>
+        <p>Name: ${poiName}</p>
+      `);
+      markersArray.push(marker);
+    });
+    // eslint-disable-next-line no-undef
+    var layerGroup = L.layerGroup(markersArray);
+    layerGroup.addTo(markupLayer);
+    if (data.eventTarget === 'pois-form') {
+      toggleFormContainer();
+    }
   });
   xhr.send(JSON.stringify(requestBody));
 }
