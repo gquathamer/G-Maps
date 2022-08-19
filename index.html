@@ -35,11 +35,11 @@
       </div>
       <form action="" class="column-eight-tenth" id="reverse-geocode-form-desktop">
         <div class="row justify-between bottom-margin padding-0">
-          <label for="address">Latitude:</label>
+          <label for="latitude">Latitude:</label>
           <input required name="latitude" type="text" id="latitude-desktop" placeholder="Type A Lat">
         </div>
         <div class="row justify-between bottom-margin padding-0">
-          <label for="address">Longitude:</label>
+          <label for="longitude">Longitude:</label>
           <input required name="longitude" type="text" id="longitude-desktop" placeholder="Type A Lng">
         </div>
         <div class="form-actions row justify-end padding-0">
@@ -69,8 +69,8 @@
       </div>
       <form action="" class="column-eight-tenth" id="pois-form-desktop">
         <div class="row justify-between bottom-margin padding-0">
-          <label for="pois">Search Radius (meters):</label>
-          <input required name="pois" type="text" id="buffer-desktop" placeholder="i.e. 200">
+          <label for="radius">Search Radius (meters):</label>
+          <input required name="radius" type="text" id="buffer-desktop" placeholder="i.e. 200">
         </div>
         <div class="form-actions row justify-end padding-0">
           <button type="submit">Find POIs</button>
@@ -82,14 +82,14 @@
         <input required name="address" type="text" id="geocode-desktop-form-input" placeholder="Type An Address">
       </div>
     </form>
-    <div id="map">
+    <div class="show" id="map">
     </div>
-    <div class="dropdown-container row column-wrap column">
+    <div class="dropdown-container hide row column-wrap column">
       <div id="geocode-menu" class="row justify-between gray-background align-items bottom-border column-one-tenth">
         <h1 class="roboto-font">Geocode</h1>
         <i class="fa-solid fa-angle-down fa-xl"></i>
       </div>
-      <form action="" class="column-eight-tenth" id="geocode-form">
+      <form action="" class="column-eight-tenth hide" id="geocode-form">
         <div class="row justify-between bottom-margin padding-0">
           <label for="address">Address:</label>
           <input required name="address" type="text" id="geocode-address" placeholder="Type An Address">
@@ -102,24 +102,24 @@
         <h1 class="roboto-font">Reverse Geocode</h1>
         <i class="fa-solid fa-angle-down fa-xl"></i>
       </div>
-      <form action="" class="column-eight-tenth" id="reverse-geocode-form">
+      <form action="" class="column-eight-tenth hide" id="reverse-geocode-form">
         <div class="row justify-between bottom-margin padding-0">
-          <label for="address">Latitude:</label>
-          <input required name="address" type="text" id="latitude" placeholder="Type An Address">
+          <label for="latitude">Latitude:</label>
+          <input required name="latitude" type="text" id="latitude" placeholder="Latitude">
         </div>
         <div class="row justify-between bottom-margin padding-0">
-          <label for="address">Longitude:</label>
-          <input required name="address" type="text" id="longitude" placeholder="Type An Address">
+          <label for="longitude">Longitude:</label>
+          <input required name="longitude" type="text" id="longitude" placeholder="Longitude">
         </div>
         <div class="form-actions row justify-end padding-0">
           <button type="submit">Send</button>
         </div>
       </form>
-      <div id="directions-menu" class="row justify-between gray-background align-items bottom-border column-one-tenth">
+      <div id="directions-menu" class="row justify-between hide gray-background align-items bottom-border column-one-tenth">
         <h1 class="roboto-font">Get Best Route</h1>
         <i class="fa-solid fa-angle-down fa-xl"></i>
       </div>
-      <form action="" class="column-eight-tenth" id="directions-form">
+      <form action="" class="column-eight-tenth hide" id="directions-form">
         <div class="row justify-between bottom-margin padding-0">
           <label for="start">Start:</label>
           <input required name="start" type="text" id="start">
@@ -132,14 +132,14 @@
           <button type="submit" class="directions-button">Get Directions</button>
         </div>
       </form>
-      <div id="pois-menu" class="row justify-between gray-background align-items bottom-border column-one-tenth">
+      <div id="pois-menu" class="row justify-between hide gray-background align-items bottom-border column-one-tenth">
         <h1 class="roboto-font">Get POIs</h1>
         <i class="fa-solid fa-angle-down fa-xl"></i>
       </div>
-      <form action="" class="column-eight-tenth" id="pois-form">
+      <form action="" class="column-eight-tenth hide" id="pois-form">
         <div class="row justify-between bottom-margin padding-0">
-          <label for="start">Search Radius (meters):</label>
-          <input required name="start" type="text" id="buffer" placeholder="i.e. 200">
+          <label for="radius">Search Radius (meters):</label>
+          <input required name="radius" type="text" id="buffer" placeholder="i.e. 200">
         </div>
         <div class="form-actions row justify-end padding-0">
           <button type="submit" class="directions-button">Get POIs</button>

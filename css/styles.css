@@ -2,6 +2,18 @@ body {
   font-family: "open sans", sans-serif;
 }
 
+.show {
+  display: block;
+}
+
+.show-flex {
+  display: flex;
+}
+
+.hide {
+  display: none;
+}
+
 .dark-green-background {
   background-color: #4b8673;
 }
@@ -47,7 +59,6 @@ body {
   left: 0;
   right: 0;
   background-color: white;
-  display: none;
 }
 
 .roboto-font {
@@ -107,23 +118,7 @@ button {
   padding: 0;
 }
 
-#geocode-form {
-  display: none;
-}
-
-#reverse-geocode-form {
-  display: none;
-}
-
 #reverse-geocode-form-desktop {
-  display: none;
-}
-
-#pois-menu {
-  display: none;
-}
-
-#pois-form {
   display: none;
 }
 
@@ -172,14 +167,6 @@ button {
     "open sans",
     sans-serif;
   width: 100%;
-}
-
-#directions-menu {
-  display: none;
-}
-
-#directions-form {
-  display: none;
 }
 
 #directions-menu-desktop {
