@@ -49,11 +49,11 @@ $dropdownContainer.addEventListener('click', function (event) {
 
 $dropdownContainerDesktop.addEventListener('click', function (event) {
   if (event.target.tagName === 'I' && event.target.closest('DIV').id === 'reverse-geocode-menu-desktop') {
-    toggleReverseGeocodeMenuDesktop();
+    toggleElement($reverseGeocodeDesktopForm);
   } else if (event.target.tagName === 'I' && event.target.closest('DIV').id === 'directions-menu-desktop') {
-    toggleDirectionsMenuDesktop();
+    toggleElement($directionsDesktopForm);
   } else if (event.target.tagName === 'I' && event.target.closest('DIV').id === 'pois-menu-desktop') {
-    togglePOIsMenuDesktop();
+    toggleElement($poisDesktopForm);
   }
 });
 
@@ -93,8 +93,8 @@ $directionsDesktopForm.addEventListener('submit', function (event) {
   event.preventDefault();
   getBestRouteDestinationAJAXRequest(event);
   $directionsDesktopForm.reset();
-  $directionsMenuDesktop.style.display = 'none';
-  $directionsDesktopForm.style.display = 'none';
+  toggleFlexElement($directionsMenuDesktop);
+  toggleElement($directionsDesktopForm);
 });
 
 $poisForm.addEventListener('submit', function (event) {
@@ -111,8 +111,8 @@ $poisDesktopForm.addEventListener('submit', function (event) {
   data.eventTarget = event.target.id;
   getPOIs(event);
   $poisDesktopForm.reset();
-  $poisMenuDesktop.style.display = 'none';
-  $poisDesktopForm.style.display = 'none';
+  toggleFlexElement($poisMenuDesktop);
+  toggleElement($poisDesktopForm);
 });
 
 function toggleElement(element) {
@@ -133,28 +133,6 @@ function toggleFlexElement(element) {
     element.classList.add('show-flex');
     element.classList.remove('hide');
   }
-}
-
-function toggleReverseGeocodeMenuDesktop() {
-  if (window.getComputedStyle($reverseGeocodeDesktopForm).display === 'block') {
-    $reverseGeocodeDesktopForm.style.display = 'none';
-  } else {
-    $reverseGeocodeDesktopForm.style.display = 'block';
-  }
-}
-
-function toggleDirectionsMenuDesktop() {
-  if (window.getComputedStyle($directionsDesktopForm).display === 'block') {
-    $directionsDesktopForm.style.display = 'none';
-  } else {
-    $directionsDesktopForm.style.display = 'block';
-  }
-}
-
-function togglePOIsMenuDesktop() {
-  if (window.getComputedStyle($poisDesktopForm).display === 'block') {
-    $poisDesktopForm.style.display = 'none';
-  } else $poisDesktopForm.style.display = 'block';
 }
 
 function createPopupContent() {
@@ -193,39 +171,37 @@ function displayPopupContent() {
   markupLayer.unbindPopup();
   markupLayer.addData(data.geoJSON);
   markupLayer.bindPopup(createPopupContent());
-  if (data.eventTarget === 'geocode-form') {
-    toggleElement($map);
-    toggleElement($dropdownContainer);
-    toggleElement($geocodeForm);
-  } else if (data.eventTarget === 'reverse-geocode-form') {
-    toggleElement($map);
-    toggleElement($dropdownContainer);
-    toggleElement($reverseGeocodeForm);
-  } else if (data.eventTarget === 'directions-form') {
-    toggleElement($map);
-    toggleElement($dropdownContainer);
-    toggleElement($directionsForm);
-  } else if (data.eventTarget === 'pois-form') {
-    toggleElement($map);
-    toggleElement($dropdownContainer);
-    toggleElement($poisForm);
-  }
   markupLayer.openPopup();
   $directionsButtonOnThePopup = document.querySelector('#directions-button');
   $poiButtonOnThePopup = document.querySelector('#poi-button');
-  $directionsButtonOnThePopup.addEventListener('click', function (event) {
+  if (data.eventTarget === 'geocode-form' || data.eventTarget === 'reverse-geocode-form' || data.eventTarget === 'directions-form' || data.eventTarget === 'pois-form') {
     toggleElement($map);
     toggleElement($dropdownContainer);
-    toggleFlexElement($directionsMenu);
-    toggleElement($directionsForm);
-    document.querySelector('#start').value = data.address;
-  });
-  $poiButtonOnThePopup.addEventListener('click', function (event) {
-    toggleElement($map);
-    toggleElement($dropdownContainer);
-    toggleFlexElement($poisMenu);
-    toggleElement($poisForm);
-  });
+    toggleElement(document.querySelector('#' + data.eventTarget));
+    $directionsButtonOnThePopup.addEventListener('click', function (event) {
+      toggleElement($map);
+      toggleElement($dropdownContainer);
+      toggleFlexElement($directionsMenu);
+      toggleElement($directionsForm);
+      document.querySelector('#start').value = data.address;
+    });
+    $poiButtonOnThePopup.addEventListener('click', function (event) {
+      toggleElement($map);
+      toggleElement($dropdownContainer);
+      toggleFlexElement($poisMenu);
+      toggleElement($poisForm);
+    });
+  } else {
+    $directionsButtonOnThePopup.addEventListener('click', function (event) {
+      toggleFlexElement($directionsMenuDesktop);
+      toggleElement($directionsDesktopForm);
+      document.querySelector('#start-desktop').value = data.address;
+    });
+    $poiButtonOnThePopup.addEventListener('click', function (event) {
+      toggleFlexElement($poisMenuDesktop);
+      toggleElement($poisDesktopForm);
+    });
+  }
   map.setView(markupLayer.getLayers()[0]._latlng, 13);
 }
 

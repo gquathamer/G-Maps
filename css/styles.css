@@ -118,18 +118,6 @@ button {
   padding: 0;
 }
 
-#reverse-geocode-form-desktop {
-  display: none;
-}
-
-#pois-menu-desktop {
-  display: none;
-}
-
-#pois-form-desktop {
-  display: none;
-}
-
 .popup-div {
   margin: 0;
   padding: 0;
@@ -167,14 +155,6 @@ button {
     "open sans",
     sans-serif;
   width: 100%;
-}
-
-#directions-menu-desktop {
-  display: none;
-}
-
-#directions-form-desktop {
-  display: none;
 }
 
 .directions-button {
