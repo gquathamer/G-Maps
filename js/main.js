@@ -13,15 +13,20 @@ var $dropdownContainer = document.querySelector('.dropdown-container');
 var $dropdownContainerDesktop = document.querySelector('.dropdown-container-desktop');
 var $reverseGeocodeDesktopForm = document.forms[0];
 var $directionsDesktopForm = document.forms[1];
-var $geocodeDesktopForm = document.forms[2];
-var $geocodeForm = document.forms[3];
-var $reverseGeocodeForm = document.forms[4];
-var $directionsForm = document.forms[5];
+var $poisDesktopForm = document.forms[2];
+var $geocodeDesktopForm = document.forms[3];
+var $geocodeForm = document.forms[4];
+var $reverseGeocodeForm = document.forms[5];
+var $directionsForm = document.forms[6];
+var $poisForm = document.forms[7];
 var $directionsButtonOnThePopup;
+var $poiButtonOnThePopup;
 var $getDirectionsMenu = document.querySelector('#directions-menu');
 var $getDirectionsForm = document.querySelector('#directions-form');
 var $getDirectionsMenuDesktop = document.querySelector('#directions-menu-desktop');
 var $getDirectionsFormDesktop = document.querySelector('#directions-form-desktop');
+var $poisMenu = document.querySelector('#pois-menu');
+var $poisMenuDesktop = document.querySelector('#pois-menu-desktop');
 
 map.addEventListener('click', function (event) {
   getReverseGeocode(event);
@@ -38,6 +43,8 @@ $dropdownContainer.addEventListener('click', function (event) {
     toggleReverseGeocodeMenu();
   } else if (event.target.tagName === 'I' && event.target.closest('DIV').id === 'directions-menu') {
     toggleDirectionsMenu();
+  } else if (event.target.tagName === 'I' && event.target.closest('DIV').id === 'pois-menu') {
+    togglePOIsMenu();
   }
 });
 
@@ -46,6 +53,8 @@ $dropdownContainerDesktop.addEventListener('click', function (event) {
     toggleReverseGeocodeMenuDesktop();
   } else if (event.target.tagName === 'I' && event.target.closest('DIV').id === 'directions-menu-desktop') {
     toggleDirectionsMenuDesktop();
+  } else if (event.target.tagName === 'I' && event.target.closest('DIV').id === 'pois-menu-desktop') {
+    togglePOIsMenuDesktop();
   }
 });
 
@@ -87,6 +96,24 @@ $directionsDesktopForm.addEventListener('submit', function (event) {
   $directionsDesktopForm.reset();
   $getDirectionsMenuDesktop.style.display = 'none';
   $getDirectionsFormDesktop.style.display = 'none';
+});
+
+$poisForm.addEventListener('submit', function (event) {
+  event.preventDefault();
+  data.eventTarget = event.target.id;
+  getPOIs(event);
+  $poisForm.reset();
+  $poisMenu.style.display = 'none';
+  $poisForm.style.display = 'none';
+});
+
+$poisDesktopForm.addEventListener('submit', function (event) {
+  event.preventDefault();
+  data.eventTarget = event.target.id;
+  getPOIs(event);
+  $poisDesktopForm.reset();
+  $poisMenuDesktop.style.display = 'none';
+  $poisDesktopForm.style.display = 'none';
 });
 
 function toggleFormContainer() {
@@ -141,6 +168,20 @@ function toggleDirectionsMenuDesktop() {
   }
 }
 
+function togglePOIsMenu() {
+  if (window.getComputedStyle($poisForm).display === 'block') {
+    $poisForm.style.display = 'none';
+  } else {
+    $poisForm.style.display = 'block';
+  }
+}
+
+function togglePOIsMenuDesktop() {
+  if (window.getComputedStyle($poisDesktopForm).display === 'block') {
+    $poisDesktopForm.style.display = 'none';
+  } else $poisDesktopForm.style.display = 'block';
+}
+
 function createPopupContent() {
   var popupDiv = document.createElement('div');
   popupDiv.setAttribute('class', 'popup-div');
@@ -181,13 +222,65 @@ function displayPopupContent() {
     toggleFormContainer();
   } else if (data.eventTarget === 'reverse-geocode-form') {
     toggleFormContainer();
+  } else if (data.eventTarget === 'directions-form') {
+    toggleFormContainer();
+  } else if (data.eventTarget === 'pois-form') {
+    toggleFormContainer();
   }
   markupLayer.openPopup();
   $directionsButtonOnThePopup = document.querySelector('#directions-button');
+  $poiButtonOnThePopup = document.querySelector('#poi-button');
   $directionsButtonOnThePopup.addEventListener('click', function (event) {
     displayBestRouteForm();
   });
+  $poiButtonOnThePopup.addEventListener('click', function (event) {
+    displayPOIForm();
+  });
   map.setView(markupLayer.getLayers()[0]._latlng, 13);
+}
+
+function displayBestRouteForm() {
+  if (window.getComputedStyle($dropdownContainerDesktop).display === 'block') {
+    $getDirectionsMenuDesktop.style.display = 'flex';
+    $getDirectionsFormDesktop.style.display = 'block';
+    document.querySelector('#start-desktop').value = data.address;
+  } else {
+    if (window.getComputedStyle($map).display === 'block') {
+      $map.style.display = 'none';
+      $dropdownContainer.style.display = 'block';
+    } else {
+      $map.style.display = 'block';
+      $dropdownContainer.style.display = 'none';
+    }
+    if (window.getComputedStyle($getDirectionsMenu).display !== 'flex') {
+      $getDirectionsMenu.style.display = 'flex';
+    }
+    if (window.getComputedStyle($getDirectionsForm).display !== 'flex') {
+      $getDirectionsForm.style.display = 'block';
+    }
+  }
+  document.querySelector('#start').value = data.address;
+}
+
+function displayPOIForm() {
+  if (window.getComputedStyle($dropdownContainerDesktop).display === 'block') {
+    $poisMenuDesktop.style.display = 'flex';
+    $poisDesktopForm.style.display = 'block';
+  } else {
+    if (window.getComputedStyle($map).display === 'block') {
+      $map.style.display = 'none';
+      $dropdownContainer.style.display = 'block';
+    } else {
+      $map.style.display = 'block';
+      $dropdownContainer.style.display = 'none';
+    }
+    if (window.getComputedStyle($poisMenu).display !== 'flex') {
+      $poisMenu.style.display = 'flex';
+    }
+    if (window.getComputedStyle($poisForm).display !== 'block') {
+      $poisForm.style.display = 'block';
+    }
+  }
 }
 
 function getOpenRoutesJSON(url, params, callback) {
@@ -249,30 +342,8 @@ function getReverseGeocode(event) {
   });
 }
 
-function displayBestRouteForm() {
-  if (window.getComputedStyle($dropdownContainerDesktop).display === 'block') {
-    $getDirectionsMenuDesktop.style.display = 'flex';
-    $getDirectionsFormDesktop.style.display = 'block';
-    document.querySelector('#start-desktop').value = data.address;
-  } else {
-    if (window.getComputedStyle($map).display === 'block') {
-      $map.style.display = 'none';
-      $dropdownContainer.style.display = 'block';
-    } else {
-      $map.style.display = 'block';
-      $dropdownContainer.style.display = 'none';
-    }
-    if (window.getComputedStyle($getDirectionsMenu).display !== 'flex') {
-      $getDirectionsMenu.style.display = 'flex';
-    }
-    if (window.getComputedStyle($getDirectionsForm).display !== 'flex') {
-      $getDirectionsForm.style.display = 'block';
-    }
-  }
-  document.querySelector('#start').value = data.address;
-}
-
 function getBestRouteDestinationAJAXRequest(event) {
+  data.eventTarget = event.target.id;
   if (data.eventTarget === 'directions-form') {
     data.address = $directionsForm.elements.destination.value;
   } else {
@@ -294,12 +365,64 @@ function getBestRouteDestinationAJAXRequest(event) {
       map.fitBounds(markupLayer.getBounds());
       var routeCoordinates = response.features[0].geometry.coordinates;
       // eslint-disable-next-line no-undef
-      markupLayer.addData(L.marker([routeCoordinates[0][1], routeCoordinates[0][0]]).toGeoJSON());
+      markupLayer.addData(L.marker([routeCoordinates[0][1], routeCoordinates[0][0]], { color: green }).toGeoJSON());
       // eslint-disable-next-line no-undef
-      markupLayer.addData(L.marker([routeCoordinates[routeCoordinates.length - 1][1], routeCoordinates[routeCoordinates.length - 1][0]]).toGeoJSON());
+      markupLayer.addData(L.marker([routeCoordinates[routeCoordinates.length - 1][1], routeCoordinates[routeCoordinates.length - 1][0]], { color: red }).toGeoJSON());
     });
     if (data.eventTarget === 'directions-form') {
       toggleFormContainer();
     }
   });
+}
+
+function getPOIs(event) {
+  var bufferDistance;
+  data.eventTarget = event.target.id;
+  if (data.eventTarget === 'pois-form') {
+    bufferDistance = event.target.elements.buffer.value;
+  } else {
+    bufferDistance = event.target.elements['buffer-desktop'].value;
+  }
+  var requestBody = {
+    request: 'pois',
+    geometry: {
+      geojson: {
+        type: 'Point',
+        coordinates: [data.longitude, data.latitude]
+      },
+      buffer: bufferDistance
+    }
+  };
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', 'https://api.openrouteservice.org/pois');
+  xhr.setRequestHeader('authorization', '5b3ce3597851110001cf62489e44bfb8d57d4a17b815aa9f855e19da');
+  xhr.setRequestHeader('content-type', 'application/json;charset=UTF-8');
+  xhr.responseType = 'json';
+  xhr.addEventListener('load', function () {
+    var poisArray = xhr.response.features;
+    var markersArray = [];
+    poisArray.forEach(element => {
+      // eslint-disable-next-line no-undef
+      var marker = L.marker([element.geometry.coordinates[1], element.geometry.coordinates[0]]);
+      var osmID = Object.keys(element.properties.category_ids);
+      var poiName;
+      if (element.properties.osm_tags) {
+        poiName = element.properties.osm_tags.name;
+      } else {
+        poiName = 'Name not found!';
+      }
+      marker.bindPopup(`
+        <p>POI category: ${element.properties.category_ids[osmID[0]].category_name}</p>
+        <p>Name: ${poiName}</p>
+      `);
+      markersArray.push(marker);
+    });
+    // eslint-disable-next-line no-undef
+    var layerGroup = L.layerGroup(markersArray);
+    layerGroup.addTo(markupLayer);
+    if (data.eventTarget === 'pois-form') {
+      toggleFormContainer();
+    }
+  });
+  xhr.send(JSON.stringify(requestBody));
 }
