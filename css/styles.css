@@ -165,3 +165,7 @@ button {
     "open sans",
     sans-serif;
 }
+
+.cursor {
+  cursor: pointer;
+}

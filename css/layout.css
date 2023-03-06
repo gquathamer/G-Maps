@@ -1,8 +1,6 @@
 .container {
-  max-width: 992px;
   margin: 0 auto;
   display: flex;
-  outline: solid #4b8673;
 }
 
 html,
@@ -71,6 +69,6 @@ body,
 
   #map {
     height: 100%;
-    flex-basis: 67%;
+    width: 100%;
   }
 }
