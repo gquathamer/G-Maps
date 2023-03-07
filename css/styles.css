@@ -1,5 +1,32 @@
 body {
-  font-family: "open sans", sans-serif;
+  font-family:
+    roboto,
+    "open sans",
+    sans-serif;
+}
+
+form {
+  padding: 1rem;
+}
+
+label {
+  font-family: roboto, "open sans", sans-serif;
+}
+
+input {
+  background-color: #b6b6b6;
+  border-radius: 10px;
+  border-color: white;
+  padding: 5px;
+  font-family: roboto, "open sans", sans-serif;
+  width: 65%;
+}
+
+button {
+  background-color: #5fd068;
+  border-radius: 10px;
+  font-family: roboto, "open sans", sans-serif;
+  padding: 0.25rem;
 }
 
 .show {
@@ -54,15 +81,28 @@ body {
 
 .dropdown-container {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: -1000px;
   left: 0;
   right: 0;
+  bottom: 0;
+  transition: top 500ms ease;
   background-color: white;
+  z-index: 1000;
+  height: 90vh;
+  width: 100%;
 }
 
-.roboto-font {
-  font-family: roboto, "open sans", sans-serif;
+.show-dropdown-container {
+  top: 0;
+}
+
+.navbar {
+  z-index: 1001;
+  height: 10%;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #4b8673;
+  position: relative;
 }
 
 .gray-background {
@@ -71,43 +111,6 @@ body {
 
 .bottom-border {
   border-bottom: 1px solid black;
-}
-
-.column-wrap {
-  flex-direction: column;
-  padding: 0;
-}
-
-.column-one-tenth {
-  flex-basis: 10%;
-}
-
-.column-eight-tenth {
-  flex-basis: 80%;
-}
-
-form {
-  padding: 2rem 1rem;
-}
-
-label {
-  font-family: roboto, "open sans", sans-serif;
-}
-
-input {
-  background-color: #b6b6b6;
-  border-radius: 10px;
-  border-color: white;
-  padding: 5px;
-  font-family: roboto, "open sans", sans-serif;
-  width: 65%;
-}
-
-button {
-  background-color: #5fd068;
-  border-radius: 10px;
-  font-family: roboto, "open sans", sans-serif;
-  padding: 0.25rem;
 }
 
 .bottom-margin {
@@ -168,4 +171,8 @@ button {
 
 .cursor {
   cursor: pointer;
+}
+
+.relative {
+  position: relative;
 }
