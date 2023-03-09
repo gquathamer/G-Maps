@@ -17,8 +17,16 @@ var $poisForm = document.querySelector('#pois-form');
 var $loaderContainer = document.querySelector('.loader-container');
 var $directionsButtonOnThePopup;
 var $poiButtonOnThePopup;
-var radius = document.querySelector('#buffer');
-var radiusError = document.querySelector('#buffer + span.error');
+var $radius = document.querySelector('#buffer');
+var $radiusError = document.querySelector('#buffer + span.error');
+var $start = document.querySelector('#start');
+var $startError = document.querySelector('#start + span.error');
+var $destination = document.querySelector('#destination');
+var $destinationError = document.querySelector('#destination + span.error');
+var $reverseLat = document.querySelector('#latitude');
+var $reverseLatError = document.querySelector('#latitude + span.error');
+var $reverseLng = document.querySelector('#longitude');
+var $reverseLngError = document.querySelector('#longitude + span.error');
 
 map.addEventListener('click', function (event) {
   event.target.id = 'map';
@@ -49,6 +57,16 @@ $geocodeForm.addEventListener('submit', function (event) {
 });
 
 $reverseGeocodeForm.addEventListener('submit', function (event) {
+  if (!$reverseLat.validity.valid) {
+    showError($reverseLat, $reverseLatError);
+    event.preventDefault();
+    return;
+  }
+  if (!$reverseLng.validity.valid) {
+    showError($reverseLng, $reverseLngError);
+    event.preventDefault();
+    return;
+  }
   event.preventDefault();
   getReverseGeocode(event);
   $reverseGeocodeForm.reset();
@@ -56,6 +74,16 @@ $reverseGeocodeForm.addEventListener('submit', function (event) {
 });
 
 $directionsForm.addEventListener('submit', function (event) {
+  if (!$start.validity.valid) {
+    showError($start, $startError);
+    event.preventDefault();
+    return;
+  }
+  if (!$destination.validity.valid) {
+    showError($destination, $destinationError);
+    event.preventDefault();
+    return;
+  }
   event.preventDefault();
   getBestRouteDestinationAJAXRequest(event);
   $directionsForm.reset();
@@ -63,10 +91,8 @@ $directionsForm.addEventListener('submit', function (event) {
 });
 
 $poisForm.addEventListener('submit', function (event) {
-  if (!radius.validity.valid) {
-    // If it isn't, we display an appropriate error message
-    showError();
-    // Then we prevent the form from being sent by canceling the event
+  if (!$radius.validity.valid) {
+    showError($radius, $radiusError);
     event.preventDefault();
     return;
   }
@@ -77,21 +103,70 @@ $poisForm.addEventListener('submit', function (event) {
   toggleElement($poisForm);
 });
 
-radius.addEventListener('input', event => {
-  if (radius.validity.valid) {
-    radiusError.textContent = '';
-    radiusError.className = 'error';
+$radius.addEventListener('input', event => {
+  if ($radius.validity.valid) {
+    $radiusError.textContent = '';
+    $radiusError.className = 'error';
   } else {
-    showError();
+    showError($radius, $radiusError);
   }
 });
 
-function showError() {
-  if (radius.validity.rangeUnderflow || radius.validity.rangeOverflow) {
-    radiusError.textContent = `Radius distance should be at least ${radius.min} and less than ${radius.max}`;
+$start.addEventListener('input', event => {
+  if ($start.validity.valid) {
+    $startError.textContent = '';
+    $startError.classname = 'error';
+  } else {
+    showError($start, $startError);
   }
-  if (radius.validity.typeMismatch) {
-    radiusError.textContent = 'Type must be a valid number!';
+});
+
+$destination.addEventListener('input', event => {
+  if ($destination.validity.valid) {
+    $destinationError.textContent = '';
+    $destinationError.classname = 'error';
+  } else {
+    showError($destination, $destinationError);
+  }
+});
+
+$reverseLat.addEventListener('input', () => {
+  if ($reverseLat.validity.valid) {
+    $reverseLatError.textContent = '';
+    $reverseLatError.classname = 'error';
+  } else {
+    showError($reverseLat, $reverseLatError);
+  }
+});
+
+$reverseLng.addEventListener('input', () => {
+  if ($reverseLng.validity.valid) {
+    $reverseLngError.textContent = '';
+    $reverseLngError.classname = 'error';
+  } else {
+    showError($reverseLng, $reverseLngError);
+  }
+});
+
+function showError(element, errorElement) {
+  if (element.validity.rangeUnderflow || element.validity.rangeOverflow) {
+    errorElement.textContent = `Must be at least ${element.min} and less than ${element.max}`;
+    return;
+  }
+  if (element.validity.typeMismatch) {
+    errorElement.textContent = 'Type must be a valid number!';
+    return;
+  }
+  if (element.validity.badInput) {
+    errorElement.textContent = 'Received bad input';
+    return;
+  }
+  if (element.validity.valueMissing) {
+    errorElement.textContent = 'This field is required';
+    return;
+  }
+  if (element.validity.tooShort || element.validity.tooLong) {
+    errorElement.textContent = `Address or location length should be at least ${element.minLength} characters long and less than ${element.maxLength} characters long`;
   }
 }
 

@@ -51,14 +51,16 @@
         <p class="roboto-font">Reverse Geocode</p>
         <i class="fa-solid fa-angle-down fa-xl cursor"></i>
       </div>
-      <form action="" class="hide" id="reverse-geocode-form">
+      <form novalidate action="" class="hide" id="reverse-geocode-form">
         <div class="row justify-between bottom-margin padding-0">
           <label for="latitude">Latitude:</label>
-          <input required name="latitude" type="text" id="latitude" placeholder="Latitude">
+          <input required name="latitude" type="number" min="-90" max="90" step="any" id="latitude" placeholder="Latitude">
+          <span class="error"></span>
         </div>
         <div class="row justify-between bottom-margin padding-0">
           <label for="longitude">Longitude:</label>
-          <input required name="longitude" type="text" id="longitude" placeholder="Longitude">
+          <input required name="longitude" type="number" min="-180" max="180" step="any" id="longitude" placeholder="Longitude">
+          <span class="error"></span>
         </div>
         <div class="form-actions row justify-end padding-0">
           <button type="submit" class="submit">Send</button>
@@ -69,14 +71,16 @@
         <p class="roboto-font">Get Best Route</p>
         <i class="fa-solid fa-angle-down fa-xl cursor"></i>
       </div>
-      <form action="" class="hide" id="directions-form">
+      <form novalidate action="" class="hide" id="directions-form">
         <div class="row justify-between bottom-margin padding-0">
           <label for="start">Start:</label>
-          <input required name="start" type="text" id="start">
+          <input required name="start" type="text" minlength="4" maxlength="50" id="start" placeholder="Type an address">
+          <span class="error"></span>
         </div>
         <div class="row justify-between bottom-margin padding-0">
           <label for="destination">Destination:</label>
-          <input required name="destination" type="text" id="destination" placeholder="Type An Address">
+          <input required name="destination" type="text" minlength="4" maxlength="50" id="destination" placeholder="Type An Address">
+          <span class="error"></span>
         </div>
         <div class="form-actions row justify-end padding-0">
           <button type="submit" class="directions-button cursor">Get Directions</button>
