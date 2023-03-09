@@ -8,23 +8,17 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 // eslint-disable-next-line no-undef
 var markupLayer = L.geoJSON().addTo(map);
 var $barContainer = document.querySelector('.bar-container');
-var $map = document.querySelector('#map');
+// var $map = document.querySelector('#map');
 var $dropdownContainer = document.querySelector('.dropdown-container');
-var $dropdownContainerDesktop = document.querySelector('.dropdown-container-desktop');
-var $reverseGeocodeDesktopForm = document.querySelector('#reverse-geocode-form-desktop');
-var $directionsDesktopForm = document.querySelector('#directions-form-desktop');
-var $poisDesktopForm = document.querySelector('#pois-form-desktop');
-var $geocodeDesktopForm = document.querySelector('#geocode-desktop-form');
 var $geocodeForm = document.querySelector('#geocode-form');
 var $reverseGeocodeForm = document.querySelector('#reverse-geocode-form');
 var $directionsForm = document.querySelector('#directions-form');
 var $poisForm = document.querySelector('#pois-form');
+var $loaderContainer = document.querySelector('.loader-container');
 var $directionsButtonOnThePopup;
 var $poiButtonOnThePopup;
-/* var $directionsMenu = document.querySelector('#directions-menu');
-var $directionsMenuDesktop = document.querySelector('#directions-menu-desktop');
-var $poisMenu = document.querySelector('#pois-menu');
-var $poisMenuDesktop = document.querySelector('#pois-menu-desktop'); */
+var radius = document.querySelector('#buffer');
+var radiusError = document.querySelector('#buffer + span.error');
 
 map.addEventListener('click', function (event) {
   event.target.id = 'map';
@@ -47,27 +41,11 @@ $dropdownContainer.addEventListener('click', function (event) {
   }
 });
 
-$dropdownContainerDesktop.addEventListener('click', function (event) {
-  if (event.target.tagName === 'I' && event.target.closest('DIV').id === 'reverse-geocode-menu-desktop') {
-    toggleElement($reverseGeocodeDesktopForm);
-  } else if (event.target.tagName === 'I' && event.target.closest('DIV').id === 'directions-menu-desktop') {
-    toggleElement($directionsDesktopForm);
-  } else if (event.target.tagName === 'I' && event.target.closest('DIV').id === 'pois-menu-desktop') {
-    toggleElement($poisDesktopForm);
-  }
-});
-
 $geocodeForm.addEventListener('submit', function (event) {
   event.preventDefault();
   getGeocode(event);
   $geocodeForm.reset();
   toggleElement($geocodeForm);
-});
-
-$geocodeDesktopForm.addEventListener('submit', function () {
-  event.preventDefault();
-  getGeocode(event);
-  $geocodeDesktopForm.reset();
 });
 
 $reverseGeocodeForm.addEventListener('submit', function (event) {
@@ -77,12 +55,6 @@ $reverseGeocodeForm.addEventListener('submit', function (event) {
   toggleElement($reverseGeocodeForm);
 });
 
-$reverseGeocodeDesktopForm.addEventListener('submit', function (event) {
-  event.preventDefault();
-  getReverseGeocode(event);
-  $reverseGeocodeDesktopForm.reset();
-});
-
 $directionsForm.addEventListener('submit', function (event) {
   event.preventDefault();
   getBestRouteDestinationAJAXRequest(event);
@@ -90,14 +62,14 @@ $directionsForm.addEventListener('submit', function (event) {
   toggleElement($directionsForm);
 });
 
-$directionsDesktopForm.addEventListener('submit', function (event) {
-  event.preventDefault();
-  getBestRouteDestinationAJAXRequest(event);
-  $directionsDesktopForm.reset();
-  toggleElement($directionsDesktopForm);
-});
-
 $poisForm.addEventListener('submit', function (event) {
+  if (!radius.validity.valid) {
+    // If it isn't, we display an appropriate error message
+    showError();
+    // Then we prevent the form from being sent by canceling the event
+    event.preventDefault();
+    return;
+  }
   event.preventDefault();
   data.eventTarget = event.target.id;
   getPOIs(event);
@@ -105,22 +77,27 @@ $poisForm.addEventListener('submit', function (event) {
   toggleElement($poisForm);
 });
 
-$poisDesktopForm.addEventListener('submit', function (event) {
-  event.preventDefault();
-  data.eventTarget = event.target.id;
-  getPOIs(event);
-  $poisDesktopForm.reset();
-  toggleElement($poisDesktopForm);
+radius.addEventListener('input', event => {
+  if (radius.validity.valid) {
+    radiusError.textContent = '';
+    radiusError.className = 'error';
+  } else {
+    showError();
+  }
 });
 
-function toggleElement(element) {
-  if (element.classList.contains('show')) {
-    element.classList.add('hide');
-    element.classList.remove('show');
-  } else {
-    element.classList.add('show');
-    element.classList.remove('hide');
+function showError() {
+  if (radius.validity.rangeUnderflow || radius.validity.rangeOverflow) {
+    radiusError.textContent = `Radius distance should be at least ${radius.min} and less than ${radius.max}`;
   }
+  if (radius.validity.typeMismatch) {
+    radiusError.textContent = 'Type must be a valid number!';
+  }
+}
+
+function toggleElement(element) {
+  element.classList.toggle('show');
+  element.classList.toggle('hide');
 }
 
 function createPopupContent() {
@@ -162,25 +139,15 @@ function displayPopupContent() {
   markupLayer.openPopup();
   $directionsButtonOnThePopup = document.querySelector('#directions-button');
   $poiButtonOnThePopup = document.querySelector('#poi-button');
-  if (data.eventTarget === 'map' || data.eventTarget === 'geocode-form' || data.eventTarget === 'reverse-geocode-form' || data.eventTarget === 'directions-form' || data.eventTarget === 'pois-form') {
-    $directionsButtonOnThePopup.addEventListener('click', function (event) {
-      toggleElement($directionsForm);
-      $dropdownContainer.classList.toggle('show-dropdown-container');
-      document.querySelector('#start').value = data.address;
-    });
-    $poiButtonOnThePopup.addEventListener('click', function (event) {
-      toggleElement($poisForm);
-      $dropdownContainer.classList.toggle('show-dropdown-container');
-    });
-  } else {
-    $directionsButtonOnThePopup.addEventListener('click', function (event) {
-      toggleElement($directionsDesktopForm);
-      document.querySelector('#start-desktop').value = data.address;
-    });
-    $poiButtonOnThePopup.addEventListener('click', function (event) {
-      toggleElement($poisDesktopForm);
-    });
-  }
+  $directionsButtonOnThePopup.addEventListener('click', function (event) {
+    toggleElement($directionsForm);
+    $dropdownContainer.classList.toggle('show-dropdown-container');
+    document.querySelector('#start').value = data.address;
+  });
+  $poiButtonOnThePopup.addEventListener('click', function (event) {
+    toggleElement($poisForm);
+    $dropdownContainer.classList.toggle('show-dropdown-container');
+  });
   map.setView(markupLayer.getLayers()[0]._latlng);
 }
 
@@ -207,11 +174,8 @@ function getOpenRoutesJSON(url, params, callback) {
 function getGeocode(event, startCoordinates) {
   var submittedAddress;
   data.eventTarget = event.target.id;
-  if (event.target.id === 'geocode-desktop-form') {
-    submittedAddress = $geocodeDesktopForm.elements.address.value;
-  } else {
-    submittedAddress = $geocodeForm.elements.address.value;
-  }
+  submittedAddress = $geocodeForm.elements.address.value;
+  $loaderContainer.classList.toggle('hide-loader-container');
   getOpenRoutesJSON('/geocode/search', { text: submittedAddress }, function (response) {
     data.latitude = response.features[0].geometry.coordinates[1];
     data.longitude = response.features[0].geometry.coordinates[0];
@@ -219,6 +183,7 @@ function getGeocode(event, startCoordinates) {
     data.geoJSON = response.features[0];
     getElevationAJAXRequest();
     $dropdownContainer.classList.toggle('show-dropdown-container');
+    $loaderContainer.classList.toggle('hide-loader-container');
   });
 }
 
@@ -232,16 +197,14 @@ function getElevationAJAXRequest() {
 function getReverseGeocode(event) {
   var submittedLatLng = [];
   data.eventTarget = event.target.id;
-  if (event.target.id === 'reverse-geocode-form-desktop') {
-    submittedLatLng.push($reverseGeocodeDesktopForm.elements.latitude.value);
-    submittedLatLng.push($reverseGeocodeDesktopForm.elements.longitude.value);
-  } else if (event.target.id === 'reverse-geocode-form') {
+  if (event.target.id === 'reverse-geocode-form') {
     submittedLatLng.push($reverseGeocodeForm.elements.latitude.value);
     submittedLatLng.push($reverseGeocodeForm.elements.longitude.value);
   } else {
     submittedLatLng.push(event.latlng.lat);
     submittedLatLng.push(event.latlng.lng);
   }
+  $loaderContainer.classList.toggle('hide-loader-container');
   getOpenRoutesJSON('/geocode/reverse', { 'point.lat': submittedLatLng[0], 'point.lon': submittedLatLng[1] }, function (response) {
     data.latitude = response.features[0].geometry.coordinates[1];
     data.longitude = response.features[0].geometry.coordinates[0];
@@ -251,19 +214,17 @@ function getReverseGeocode(event) {
     if (event.target.id !== 'map') {
       $dropdownContainer.classList.toggle('show-dropdown-container');
     }
+    $loaderContainer.classList.toggle('hide-loader-container');
   });
 }
 
 function getBestRouteDestinationAJAXRequest(event) {
   data.eventTarget = event.target.id;
-  if (data.eventTarget === 'directions-form') {
-    data.address = $directionsForm.elements.destination.value;
-  } else {
-    data.address = $directionsDesktopForm.elements.destination.value;
-  }
+  data.address = $directionsForm.elements.destination.value;
   var startCoordinates = [];
   startCoordinates.push(data.latitude);
   startCoordinates.push(data.longitude);
+  $loaderContainer.classList.toggle('hide-loader-container');
   getOpenRoutesJSON('/geocode/search', { text: data.address }, function (response) {
     var routeParameters = {
       start: startCoordinates[1] + ',' + startCoordinates[0],
@@ -280,6 +241,7 @@ function getBestRouteDestinationAJAXRequest(event) {
       markupLayer.addData(L.marker([routeCoordinates[0][1], routeCoordinates[0][0]]).toGeoJSON());
       // eslint-disable-next-line no-undef
       markupLayer.addData(L.marker([routeCoordinates[routeCoordinates.length - 1][1], routeCoordinates[routeCoordinates.length - 1][0]]).toGeoJSON());
+      $loaderContainer.classList.toggle('hide-loader-container');
     });
     $dropdownContainer.classList.toggle('show-dropdown-container');
     /* if (data.eventTarget === 'directions-form') {
@@ -292,11 +254,11 @@ function getBestRouteDestinationAJAXRequest(event) {
 function getPOIs(event) {
   var bufferDistance;
   data.eventTarget = event.target.id;
-  if (data.eventTarget === 'pois-form') {
-    bufferDistance = event.target.elements.buffer.value;
-  } else {
+  /* if (data.eventTarget === 'pois-form') { */
+  bufferDistance = event.target.elements.buffer.value;
+  /* } else {
     bufferDistance = event.target.elements['buffer-desktop'].value;
-  }
+  } */
   var requestBody = {
     request: 'pois',
     geometry: {
@@ -334,10 +296,8 @@ function getPOIs(event) {
     // eslint-disable-next-line no-undef
     var layerGroup = L.layerGroup(markersArray);
     layerGroup.addTo(markupLayer);
-    if (data.eventTarget === 'pois-form') {
-      toggleElement($map);
-      toggleElement($dropdownContainer);
-    }
+    $loaderContainer.classList.toggle('hide-loader-container');
   });
   xhr.send(JSON.stringify(requestBody));
+  $loaderContainer.classList.toggle('hide-loader-container');
 }

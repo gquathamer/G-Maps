@@ -3,6 +3,7 @@ body,
 #map {
   height: 100%;
   width: 100%;
+  position: absolute;
 }
 
 .container {
@@ -13,6 +14,7 @@ body,
 .row {
   display: flex;
   padding: 0 1rem;
+  flex-wrap: wrap;
 }
 
 .column-third,
@@ -38,12 +40,26 @@ body,
   justify-content: start;
 }
 
-.dropdown-container-desktop {
+#geocode-desktop-form {
   display: none;
 }
 
-#geocode-desktop-form {
-  display: none;
+.dropdown-container {
+  position: absolute;
+  top: -1000px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transition: top 500ms ease;
+  background-color: white;
+  z-index: 1000;
+  height: 90vh;
+  width: 100%;
+  flex-wrap: nowrap;
+}
+
+.show-dropdown-container {
+  top: 0;
 }
 
 @media screen and (min-width: 576px) {
@@ -75,13 +91,36 @@ body,
     display: none;
   }
 
-  .dropdown-container-desktop {
-    flex-basis: 33%;
-    display: block;
+  .dropdown-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: white;
+    z-index: 1000;
+    height: 90vh;
+    width: 33.33%;
+  }
+
+  .show-dropdown-container {
+    top: 0;
   }
 
   #map {
     height: 100%;
-    width: 100%;
+    width: 66.67%;
+    position: absolute;
+    right: 0;
+  }
+
+  form input {
+    flex-basis: 100%;
+    max-width: 300px;
+  }
+
+  form label {
+    flex-basis: 100%;
+    max-width: 300px;
   }
 }

@@ -7,19 +7,27 @@ body {
 
 form {
   padding: 1rem;
+  border-bottom: 1px solid black;
 }
 
 label {
   font-family: roboto, "open sans", sans-serif;
+  padding: 0.5rem 0;
 }
 
 input {
-  background-color: #b6b6b6;
-  border-radius: 10px;
-  border-color: white;
-  padding: 5px;
+  background-color: rgba(182, 182, 182, 0.75);
+  padding: 0.5rem;
   font-family: roboto, "open sans", sans-serif;
-  width: 65%;
+  width: 100%;
+}
+
+input:invalid {
+  border: 1px solid red;
+}
+
+input:focus:invalid {
+  outline: none;
 }
 
 button {
@@ -27,6 +35,14 @@ button {
   border-radius: 10px;
   font-family: roboto, "open sans", sans-serif;
   padding: 0.25rem;
+}
+
+.error {
+  width: 100%;
+  padding: 0.5rem 0;
+  font-size: 80%;
+  color: red;
+  box-sizing: border-box;
 }
 
 .show {
@@ -77,23 +93,6 @@ button {
 
 .position-relative {
   position: relative;
-}
-
-.dropdown-container {
-  position: absolute;
-  top: -1000px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  transition: top 500ms ease;
-  background-color: white;
-  z-index: 1000;
-  height: 90vh;
-  width: 100%;
-}
-
-.show-dropdown-container {
-  top: 0;
 }
 
 .navbar {
@@ -175,4 +174,40 @@ button {
 
 .relative {
   position: relative;
+}
+
+.loader-container {
+  height: 100vh;
+  width: 100vw;
+  background-color: rgba(0, 0, 0, 0.75);
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1002;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hide-loader-container {
+  display: none;
+}
+
+.loader {
+  border: 16px solid #f3f3f3;
+  border-top: 16px solid #3498db;
+  border-radius: 100%;
+  width: 6rem;
+  height: 6rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }

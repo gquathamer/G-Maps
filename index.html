@@ -28,72 +28,9 @@
     </div>
   </header>
   <main class="container height-90 position-relative">
-
-    <!--Desktop version content-->
-    <div class="dropdown-container-desktop row column-wrap column-fourth">
-      <div id="reverse-geocode-menu-desktop"
-        class="row justify-between gray-background align-items bottom-border column-one-tenth">
-        <h1 class="roboto-font">Reverse Geocode</h1>
-        <i class="fa-solid fa-angle-down fa-xl cursor"></i>
-      </div>
-      <form action="" class="column-eight-tenth hide" id="reverse-geocode-form-desktop">
-        <div class="row justify-between bottom-margin padding-0">
-          <label for="latitude">Latitude:</label>
-          <input required name="latitude" type="text" id="latitude-desktop" placeholder="Type A Lat">
-        </div>
-        <div class="row justify-between bottom-margin padding-0">
-          <label for="longitude">Longitude:</label>
-          <input required name="longitude" type="text" id="longitude-desktop" placeholder="Type A Lng">
-        </div>
-        <div class="form-actions row justify-end padding-0">
-          <button type="submit" class="cursor">Send</button>
-        </div>
-      </form>
-      <div id="directions-menu-desktop" class="row hide justify-between gray-background align-items bottom-border column-one-tenth">
-        <h1 class="roboto-font">Get Best Route</h1>
-        <i class="fa-solid fa-angle-down fa-xl cursor"></i>
-      </div>
-      <form action="" class="column-eight-tenth hide" id="directions-form-desktop">
-        <div class="row justify-between bottom-margin padding-0">
-          <label for="start">Start:</label>
-          <input required name="start" type="text" id="start-desktop">
-        </div>
-        <div class="row justify-between bottom-margin padding-0">
-          <label for="destination">Destination:</label>
-          <input required name="destination" type="text" id="destination-desktop" placeholder="Type An Address">
-        </div>
-        <div class="form-actions row justify-end padding-0">
-          <button type="submit" class="directions-button cursor">Get Directions</button>
-        </div>
-      </form>
-      <div id="pois-menu-desktop" class="row hide justify-between gray-background align-items bottom-border column-one-tenth">
-        <h1 class="roboto-font">Find POIs</h1>
-        <i class="fa-solid fa-angle-down fa-xl cursor"></i>
-      </div>
-      <form action="" class="column-eight-tenth hide" id="pois-form-desktop">
-        <div class="row justify-between bottom-margin padding-0">
-          <label for="radius">Search Radius (meters):</label>
-          <input required name="radius" type="text" id="buffer-desktop" placeholder="i.e. 200">
-        </div>
-        <div class="form-actions row justify-end padding-0">
-          <button type="submit" class="cursor">Find POIs</button>
-        </div>
-      </form>
-    </div>
-    <form action="" class="column-eight-tenth" id="geocode-desktop-form">
-      <div class="row justify-end padding-0">
-        <input required name="address" type="text" id="geocode-desktop-form-input" placeholder="Type An Address">
-      </div>
-    </form>
+    <!--Map container-->
     <div class="show" id="map">
     </div>
-
-
-
-
-
-
-    <!--Mobile version content-->
     <div class="dropdown-container row column-wrap column">
       <!--Geocode menu-->
       <div id="geocode-menu" class="row justify-between gray-background align-items bottom-border">
@@ -150,10 +87,11 @@
         <p class="roboto-font">Get POIs</p>
         <i class="fa-solid fa-angle-down fa-xl cursor"></i>
       </div>
-      <form action="" class="hide" id="pois-form">
+      <form novalidate class="hide" id="pois-form">
         <div class="row justify-between bottom-margin padding-0">
           <label for="radius">Search Radius (meters):</label>
-          <input required name="radius" type="text" id="buffer" placeholder="i.e. 200">
+          <input required name="radius" type="number" id="buffer" min="1" max="1999" placeholder="i.e. 200">
+          <span class="error"></span>
         </div>
         <div class="form-actions row justify-end padding-0">
           <button type="submit" class="directions-button cursor">Get POIs</button>
@@ -161,7 +99,11 @@
       </form>
     </div>
   </main>
+  <div class="loader-container hide-loader-container">
+    <div class="loader"></div>
+  </div>
   <script src="js/data.js"></script>
+  <script src="js/validation.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
