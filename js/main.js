@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-undef
-var map = L.map('map').setView([33.694975, -117.743969], 13);
+var map = L.map('map').setView([39.717449, -105.089117], 13);
 // eslint-disable-next-line no-undef
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
@@ -84,7 +84,7 @@ $reverseGeocodeForm.addEventListener('submit', function (event) {
 
 $directionsForm.addEventListener('submit', function (event) {
   if (!data.latitude || !data.longitude) {
-    $startError.textContent = 'Please select a location on the map or use the geocoder tool first!';
+    $startError.textContent = 'Please select a location on the map or use the geocoder tool to get a starting point!';
     event.preventDefault();
     return;
   }
@@ -113,7 +113,7 @@ $poisForm.addEventListener('submit', function (event) {
     return;
   }
   if (!data.latitude || !data.longitude) {
-    $radiusError.textContent = 'Please select a location on the map or use the geocoder tool first!';
+    $radiusError.textContent = 'Please select a location on the map or use the geocoder tool to get a starting point!';
     event.preventDefault();
     return;
   }
@@ -128,7 +128,7 @@ $poisForm.addEventListener('submit', function (event) {
 
 $radius.addEventListener('input', event => {
   if (!data.latitude || !data.longitude) {
-    $radiusError.textContent = 'Please select a location on the map or use the geocoder tool first!';
+    $radiusError.textContent = 'Please select a location on the map or use the geocoder tool to get a starting point!';
     event.preventDefault();
   } else if ($radius.validity.valid) {
     $radiusError.textContent = '';
@@ -140,7 +140,7 @@ $radius.addEventListener('input', event => {
 
 $start.addEventListener('input', event => {
   if (!data.latitude || !data.longitude) {
-    $startError.textContent = 'Please select a location on the map or use the geocoder tool first!';
+    $startError.textContent = 'Please select a location on the map or use the geocoder tool to get a starting point!';
     event.preventDefault();
   } else if ($start.validity.valid) {
     $startError.textContent = '';
@@ -187,6 +187,7 @@ $geocode.addEventListener('input', () => {
   }
 });
 
+// show error function for all form inputs
 function showError(element, errorElement) {
   if (element.validity.rangeUnderflow || element.validity.rangeOverflow) {
     errorElement.textContent = `Must be at least ${element.min} and less than ${element.max}`;
@@ -275,16 +276,12 @@ function getOpenRoutesJSON(url, params, callback) {
   xhr.addEventListener('load', function () {
     callback(xhr.response);
   });
-  xhr.addEventListener('error', function () {
-    alert('something went wrong');
-  });
   xhr.send();
 }
 
 function getGeocode(event, startCoordinates) {
-  var submittedAddress;
-  data.eventTarget = event.target.id;
-  submittedAddress = $geocodeForm.elements.address.value;
+  var submittedAddress = $geocodeForm.elements.address.value;
+  // data.eventTarget = event.target.id;
   $loaderContainer.classList.toggle('hide-loader-container');
   getOpenRoutesJSON('/geocode/search', { text: submittedAddress }, function (response) {
     if (response.error || response.code) {
@@ -346,7 +343,7 @@ function getReverseGeocode(event) {
 function checkResponseForError(response, element, errorElement) {
   if (response.error) {
     toggleElement(element);
-    errorElement.textContent = 'Unfortunately an error occurred and you may need to refine your inputs';
+    errorElement.textContent = `${response.error.code}: ${response.error.message}`;
 
   }
   if (response.code && response.message) {
@@ -359,6 +356,17 @@ function getBestRouteDestinationAJAXRequest(event) {
   data.eventTarget = event.target.id;
   data.address = $directionsForm.elements.destination.value;
   var startCoordinates = [];
+  if (!data.latitude || !data.longitude) {
+    getOpenRoutesJSON('/geocode/search', { text: $start.value }, function (response) {
+      if (response.error || response.code) {
+        checkResponseForError(response, $directionsForm, $startError);
+        $dropdownContainer.classList.toggle('show-dropdown-container');
+        return;
+      }
+      startCoordinates.push(response.features[0].geometry.coordinates[1]);
+      startCoordinates.push(response.features[0].geometry.coordinates[0]);
+    });
+  }
   startCoordinates.push(data.latitude);
   startCoordinates.push(data.longitude);
   $loaderContainer.classList.toggle('hide-loader-container');

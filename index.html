@@ -75,7 +75,7 @@
       <form novalidate action="" class="hide" id="directions-form">
         <div class="row justify-between bottom-margin padding-0">
           <label for="start">Start:</label>
-          <input required readonly name="start" type="text" minlength="4" maxlength="50" id="start" placeholder="Type an address">
+          <input required name="start" type="text" minlength="4" maxlength="50" id="start" placeholder="Type an address">
           <span class="error"></span>
         </div>
         <div class="row justify-between bottom-margin padding-0">
@@ -107,8 +107,8 @@
   <div class="loader-container hide-loader-container">
     <div class="loader"></div>
   </div>
-  <script src="js/data.js"></script>
-  <script src="js/validation.js"></script>
-  <script src="js/main.js"></script>
+  <script src="js/data.js" type="module"></script>
+  <script src="js/validation.js" type="module"></script>
+  <script src="js/main.js" type="module"></script>
 </body>
 </html>
