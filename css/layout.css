@@ -124,3 +124,9 @@ body,
     max-width: 300px;
   }
 }
+
+@media screen and (min-width: 1896px) {
+  span.error {
+    text-align: right;
+  }
+}

@@ -27,6 +27,8 @@ var $reverseLat = document.querySelector('#latitude');
 var $reverseLatError = document.querySelector('#latitude + span.error');
 var $reverseLng = document.querySelector('#longitude');
 var $reverseLngError = document.querySelector('#longitude + span.error');
+var $geocode = document.querySelector('#geocode-address');
+var $geocodeError = document.querySelector('#geocode-address + span.error');
 
 map.addEventListener('click', function (event) {
   event.target.id = 'map';
@@ -49,7 +51,14 @@ $dropdownContainer.addEventListener('click', function (event) {
   }
 });
 
+// All form listeners
+
 $geocodeForm.addEventListener('submit', function (event) {
+  if (!$geocode.validity.valid) {
+    showError($geocode, $geocodeError);
+    event.preventDefault();
+    return;
+  }
   event.preventDefault();
   getGeocode(event);
   $geocodeForm.reset();
@@ -74,6 +83,11 @@ $reverseGeocodeForm.addEventListener('submit', function (event) {
 });
 
 $directionsForm.addEventListener('submit', function (event) {
+  if (!data.latitude || !data.longitude) {
+    $startError.textContent = 'Please select a location on the map or use the geocoder tool first!';
+    event.preventDefault();
+    return;
+  }
   if (!$start.validity.valid) {
     showError($start, $startError);
     event.preventDefault();
@@ -85,6 +99,8 @@ $directionsForm.addEventListener('submit', function (event) {
     return;
   }
   event.preventDefault();
+  $startError.textContent = '';
+  $destinationError.textContent = '';
   getBestRouteDestinationAJAXRequest(event);
   $directionsForm.reset();
   toggleElement($directionsForm);
@@ -96,6 +112,11 @@ $poisForm.addEventListener('submit', function (event) {
     event.preventDefault();
     return;
   }
+  if (!data.latitude || !data.longitude) {
+    $radiusError.textContent = 'Please select a location on the map or use the geocoder tool first!';
+    event.preventDefault();
+    return;
+  }
   event.preventDefault();
   data.eventTarget = event.target.id;
   getPOIs(event);
@@ -103,8 +124,13 @@ $poisForm.addEventListener('submit', function (event) {
   toggleElement($poisForm);
 });
 
+// All input listeners
+
 $radius.addEventListener('input', event => {
-  if ($radius.validity.valid) {
+  if (!data.latitude || !data.longitude) {
+    $radiusError.textContent = 'Please select a location on the map or use the geocoder tool first!';
+    event.preventDefault();
+  } else if ($radius.validity.valid) {
     $radiusError.textContent = '';
     $radiusError.className = 'error';
   } else {
@@ -113,7 +139,10 @@ $radius.addEventListener('input', event => {
 });
 
 $start.addEventListener('input', event => {
-  if ($start.validity.valid) {
+  if (!data.latitude || !data.longitude) {
+    $startError.textContent = 'Please select a location on the map or use the geocoder tool first!';
+    event.preventDefault();
+  } else if ($start.validity.valid) {
     $startError.textContent = '';
     $startError.classname = 'error';
   } else {
@@ -130,7 +159,8 @@ $destination.addEventListener('input', event => {
   }
 });
 
-$reverseLat.addEventListener('input', () => {
+$reverseLat.addEventListener('input', event => {
+  data.latitude = event.target.value;
   if ($reverseLat.validity.valid) {
     $reverseLatError.textContent = '';
     $reverseLatError.classname = 'error';
@@ -145,6 +175,15 @@ $reverseLng.addEventListener('input', () => {
     $reverseLngError.classname = 'error';
   } else {
     showError($reverseLng, $reverseLngError);
+  }
+});
+
+$geocode.addEventListener('input', () => {
+  if ($geocode.validity.valid) {
+    $geocodeError.textContent = '';
+    $geocodeError.classname = 'error';
+  } else {
+    showError($geocode, $geocodeError);
   }
 });
 
@@ -234,10 +273,6 @@ function getOpenRoutesJSON(url, params, callback) {
   xhr.open('GET', ajaxURL.toString());
   xhr.responseType = 'json';
   xhr.addEventListener('load', function () {
-    if (xhr.status === 404) {
-      alert('something went wrong');
-      return;
-    }
     callback(xhr.response);
   });
   xhr.addEventListener('error', function () {
@@ -252,18 +287,33 @@ function getGeocode(event, startCoordinates) {
   submittedAddress = $geocodeForm.elements.address.value;
   $loaderContainer.classList.toggle('hide-loader-container');
   getOpenRoutesJSON('/geocode/search', { text: submittedAddress }, function (response) {
+    if (response.error || response.code) {
+      checkResponseForError(response, $geocodeForm, $geocodeError);
+      return;
+    }
+    if (response.features.length < 1) {
+      $dropdownContainer.classList.toggle('show-dropdown-container');
+      $loaderContainer.classList.toggle('hide-loader-container');
+      toggleElement($geocodeForm);
+      $geocodeError.textContent = 'That address could not be found, please try changing the format or selecting a different address';
+      return;
+    }
     data.latitude = response.features[0].geometry.coordinates[1];
     data.longitude = response.features[0].geometry.coordinates[0];
     data.address = response.features[0].properties.label;
     data.geoJSON = response.features[0];
-    getElevationAJAXRequest();
+    getElevationAJAXRequest($geocodeForm, $geocodeError);
     $dropdownContainer.classList.toggle('show-dropdown-container');
     $loaderContainer.classList.toggle('hide-loader-container');
   });
 }
 
-function getElevationAJAXRequest() {
+function getElevationAJAXRequest(element, errorElement) {
   getOpenRoutesJSON('/elevation/point', { geometry: data.longitude + ',' + data.latitude }, function (response) {
+    if (response.error || response.code) {
+      checkResponseForError(response, element, errorElement);
+      return;
+    }
     data.elevation = response.geometry.coordinates[2];
     displayPopupContent();
   });
@@ -285,12 +335,24 @@ function getReverseGeocode(event) {
     data.longitude = response.features[0].geometry.coordinates[0];
     data.address = response.features[0].properties.label;
     data.geoJSON = response.features[0];
-    getElevationAJAXRequest();
+    getElevationAJAXRequest($reverseGeocodeForm, $reverseLatError);
     if (event.target.id !== 'map') {
       $dropdownContainer.classList.toggle('show-dropdown-container');
     }
     $loaderContainer.classList.toggle('hide-loader-container');
   });
+}
+
+function checkResponseForError(response, element, errorElement) {
+  if (response.error) {
+    toggleElement(element);
+    errorElement.textContent = 'Unfortunately an error occurred and you may need to refine your inputs';
+
+  }
+  if (response.code && response.message) {
+    toggleElement(element);
+    errorElement.textContent = `${response.code}: ${response.message}`;
+  }
 }
 
 function getBestRouteDestinationAJAXRequest(event) {
@@ -301,11 +363,21 @@ function getBestRouteDestinationAJAXRequest(event) {
   startCoordinates.push(data.longitude);
   $loaderContainer.classList.toggle('hide-loader-container');
   getOpenRoutesJSON('/geocode/search', { text: data.address }, function (response) {
+    if (response.error || response.code) {
+      checkResponseForError(response, $directionsForm, $startError);
+      $dropdownContainer.classList.toggle('show-dropdown-container');
+      return;
+    }
     var routeParameters = {
       start: startCoordinates[1] + ',' + startCoordinates[0],
       end: response.features[0].geometry.coordinates[0] + ',' + response.features[0].geometry.coordinates[1]
     };
     getOpenRoutesJSON('/v2/directions/driving-car', routeParameters, function (response) {
+      if (response.error || response.code) {
+        checkResponseForError(response, $directionsForm, $startError);
+        $loaderContainer.classList.toggle('hide-loader-container');
+        return;
+      }
       markupLayer.closePopup();
       markupLayer.clearLayers();
       markupLayer.unbindPopup();
@@ -319,21 +391,13 @@ function getBestRouteDestinationAJAXRequest(event) {
       $loaderContainer.classList.toggle('hide-loader-container');
     });
     $dropdownContainer.classList.toggle('show-dropdown-container');
-    /* if (data.eventTarget === 'directions-form') {
-      toggleElement($map);
-      toggleElement($dropdownContainer);
-    } */
   });
 }
 
 function getPOIs(event) {
   var bufferDistance;
   data.eventTarget = event.target.id;
-  /* if (data.eventTarget === 'pois-form') { */
   bufferDistance = event.target.elements.buffer.value;
-  /* } else {
-    bufferDistance = event.target.elements['buffer-desktop'].value;
-  } */
   var requestBody = {
     request: 'pois',
     geometry: {
