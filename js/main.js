@@ -32,7 +32,7 @@ var $geocodeError = document.querySelector('#geocode-address + span.error');
 
 map.addEventListener('click', function (event) {
   event.target.id = 'map';
-  getReverseGeocode(event);
+  // getReverseGeocode(event);
 });
 
 $barContainer.addEventListener('click', function () {
@@ -77,7 +77,7 @@ $reverseGeocodeForm.addEventListener('submit', function (event) {
     return;
   }
   event.preventDefault();
-  getReverseGeocode(event);
+  // getReverseGeocode(event);
   $reverseGeocodeForm.reset();
   toggleElement($reverseGeocodeForm);
 });
@@ -215,20 +215,20 @@ function toggleElement(element) {
   element.classList.toggle('hide');
 }
 
-function createPopupContent() {
+function createPopupContent(displayObject) {
   var popupDiv = document.createElement('div');
   popupDiv.setAttribute('class', 'popup-div');
   var address = document.createElement('p');
-  address.textContent = 'Address: ' + data.address;
+  address.textContent = 'Address: ' + displayObject.address;
   popupDiv.appendChild(address);
   var latitude = document.createElement('p');
-  latitude.textContent = 'Latitude: ' + data.latitude;
+  latitude.textContent = 'Latitude: ' + displayObject.latitude;
   popupDiv.appendChild(latitude);
   var longitude = document.createElement('p');
-  longitude.textContent = 'Longitude: ' + data.longitude;
+  longitude.textContent = 'Longitude: ' + displayObject.longitude;
   popupDiv.appendChild(longitude);
   var elevationData = document.createElement('p');
-  elevationData.textContent = 'Elevation: ' + data.elevation + ' meters';
+  elevationData.textContent = 'Elevation: ' + displayObject.elevation + ' meters';
   popupDiv.appendChild(elevationData);
   var buttonDiv = document.createElement('div');
   buttonDiv.setAttribute('class', 'button-div');
@@ -246,11 +246,11 @@ function createPopupContent() {
   return popupDiv;
 }
 
-function displayPopupContent() {
+function displayPopupContent(displayObject) {
   markupLayer.clearLayers();
   markupLayer.unbindPopup();
-  markupLayer.addData(data.geoJSON);
-  markupLayer.bindPopup(createPopupContent());
+  markupLayer.addData(displayObject.geoJSON);
+  markupLayer.bindPopup(createPopupContent(displayObject));
   markupLayer.openPopup();
   $directionsButtonOnThePopup = document.querySelector('#directions-button');
   $poiButtonOnThePopup = document.querySelector('#poi-button');
@@ -284,39 +284,28 @@ function getGeocode(event, startCoordinates) {
   // data.eventTarget = event.target.id;
   $loaderContainer.classList.toggle('hide-loader-container');
   getOpenRoutesJSON('/geocode/search', { text: submittedAddress }, function (response) {
-    if (response.error || response.code) {
+    if (response.error || response.code || response.features.length < 1) {
       checkResponseForError(response, $geocodeForm, $geocodeError);
       return;
     }
-    if (response.features.length < 1) {
-      $dropdownContainer.classList.toggle('show-dropdown-container');
+    var displayObject = {
+      latitude: response.features[0].geometry.coordinates[1],
+      longitude: response.features[0].geometry.coordinates[0],
+      address: response.features[0].properties.label,
+      geoJSON: response.features[0]
+    };
+    getOpenRoutesJSON('/elevation/point', { geometry: displayObject.longitude + ',' + displayObject.latitude }, function (response) {
+      if (response.error || response.code) {
+        checkResponseForError(response, $geocode, $geocodeError);
+      }
+      displayObject.elevation = response.geometry.coordinates[2];
       $loaderContainer.classList.toggle('hide-loader-container');
-      toggleElement($geocodeForm);
-      $geocodeError.textContent = 'That address could not be found, please try changing the format or selecting a different address';
-      return;
-    }
-    data.latitude = response.features[0].geometry.coordinates[1];
-    data.longitude = response.features[0].geometry.coordinates[0];
-    data.address = response.features[0].properties.label;
-    data.geoJSON = response.features[0];
-    getElevationAJAXRequest($geocodeForm, $geocodeError);
-    $dropdownContainer.classList.toggle('show-dropdown-container');
-    $loaderContainer.classList.toggle('hide-loader-container');
+      displayPopupContent(displayObject);
+    });
   });
 }
 
-function getElevationAJAXRequest(element, errorElement) {
-  getOpenRoutesJSON('/elevation/point', { geometry: data.longitude + ',' + data.latitude }, function (response) {
-    if (response.error || response.code) {
-      checkResponseForError(response, element, errorElement);
-      return;
-    }
-    data.elevation = response.geometry.coordinates[2];
-    displayPopupContent();
-  });
-}
-
-function getReverseGeocode(event) {
+/* function getReverseGeocode(event) {
   var submittedLatLng = [];
   data.eventTarget = event.target.id;
   if (event.target.id === 'reverse-geocode-form') {
@@ -338,17 +327,25 @@ function getReverseGeocode(event) {
     }
     $loaderContainer.classList.toggle('hide-loader-container');
   });
-}
+} */
 
 function checkResponseForError(response, element, errorElement) {
+  if (!$loaderContainer.classList.contains('hide')) {
+    $loaderContainer.classList.toggle('hide-loader-container');
+  }
   if (response.error) {
     toggleElement(element);
     errorElement.textContent = `${response.error.code}: ${response.error.message}`;
-
+    return;
   }
   if (response.code && response.message) {
     toggleElement(element);
     errorElement.textContent = `${response.code}: ${response.message}`;
+    return;
+  }
+  if (response.features.length < 1) {
+    toggleElement(element);
+    errorElement.textContent = 'Sorry that didn\'t yield any results';
   }
 }
 
