@@ -94,8 +94,13 @@
       </div>
       <form novalidate class="hide" id="pois-form">
         <div class="row justify-between bottom-margin padding-0">
-          <label for="radius">Search Radius (meters):</label>
+          <label for="buffer">Search Radius (meters):</label>
           <input required name="radius" type="number" id="buffer" min="1" max="1999" placeholder="i.e. 200">
+          <span class="error"></span>
+        </div>
+        <div class="row justify-between bottom-margin padding-0">
+          <label for="buffer-address">Radius Address:</label>
+          <input required name="buffer-address" type="text" minlength="4" maxlength="50" id="buffer-address" placeholder="Type An Address">
           <span class="error"></span>
         </div>
         <div class="form-actions row justify-end padding-0">

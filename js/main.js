@@ -19,6 +19,8 @@ var $directionsButtonOnThePopup;
 var $poiButtonOnThePopup;
 var $radius = document.querySelector('#buffer');
 var $radiusError = document.querySelector('#buffer + span.error');
+var $bufferAddress = document.querySelector('#buffer-address');
+var $bufferAddressError = document.querySelector('#buffer-address + span.error');
 var $start = document.querySelector('#start');
 var $startError = document.querySelector('#start + span.error');
 var $destination = document.querySelector('#destination');
@@ -32,7 +34,7 @@ var $geocodeError = document.querySelector('#geocode-address + span.error');
 
 map.addEventListener('click', function (event) {
   event.target.id = 'map';
-  // getReverseGeocode(event);
+  getReverseGeocode(event);
 });
 
 $barContainer.addEventListener('click', function () {
@@ -60,9 +62,7 @@ $geocodeForm.addEventListener('submit', function (event) {
     return;
   }
   event.preventDefault();
-  getGeocode(event);
-  $geocodeForm.reset();
-  toggleElement($geocodeForm);
+  getGeocode();
 });
 
 $reverseGeocodeForm.addEventListener('submit', function (event) {
@@ -77,17 +77,10 @@ $reverseGeocodeForm.addEventListener('submit', function (event) {
     return;
   }
   event.preventDefault();
-  // getReverseGeocode(event);
-  $reverseGeocodeForm.reset();
-  toggleElement($reverseGeocodeForm);
+  getReverseGeocode(event);
 });
 
 $directionsForm.addEventListener('submit', function (event) {
-  if (!data.latitude || !data.longitude) {
-    $startError.textContent = 'Please select a location on the map or use the geocoder tool to get a starting point!';
-    event.preventDefault();
-    return;
-  }
   if (!$start.validity.valid) {
     showError($start, $startError);
     event.preventDefault();
@@ -99,11 +92,7 @@ $directionsForm.addEventListener('submit', function (event) {
     return;
   }
   event.preventDefault();
-  $startError.textContent = '';
-  $destinationError.textContent = '';
-  getBestRouteDestinationAJAXRequest(event);
-  $directionsForm.reset();
-  toggleElement($directionsForm);
+  getRoute(event);
 });
 
 $poisForm.addEventListener('submit', function (event) {
@@ -112,25 +101,19 @@ $poisForm.addEventListener('submit', function (event) {
     event.preventDefault();
     return;
   }
-  if (!data.latitude || !data.longitude) {
-    $radiusError.textContent = 'Please select a location on the map or use the geocoder tool to get a starting point!';
+  if (!$bufferAddress.validity.valid) {
+    showError($bufferAddress, $bufferAddressError);
     event.preventDefault();
     return;
   }
   event.preventDefault();
-  data.eventTarget = event.target.id;
   getPOIs(event);
-  $poisForm.reset();
-  toggleElement($poisForm);
 });
 
 // All input listeners
 
 $radius.addEventListener('input', event => {
-  if (!data.latitude || !data.longitude) {
-    $radiusError.textContent = 'Please select a location on the map or use the geocoder tool to get a starting point!';
-    event.preventDefault();
-  } else if ($radius.validity.valid) {
+  if ($radius.validity.valid) {
     $radiusError.textContent = '';
     $radiusError.className = 'error';
   } else {
@@ -138,11 +121,17 @@ $radius.addEventListener('input', event => {
   }
 });
 
+$bufferAddress.addEventListener('input', event => {
+  if ($bufferAddress.validity.valid) {
+    $bufferAddressError.textContent = '';
+    $bufferAddressError.className = 'error';
+  } else {
+    showError($bufferAddress, $bufferAddressError);
+  }
+});
+
 $start.addEventListener('input', event => {
-  if (!data.latitude || !data.longitude) {
-    $startError.textContent = 'Please select a location on the map or use the geocoder tool to get a starting point!';
-    event.preventDefault();
-  } else if ($start.validity.valid) {
+  if ($start.validity.valid) {
     $startError.textContent = '';
     $startError.classname = 'error';
   } else {
@@ -160,7 +149,6 @@ $destination.addEventListener('input', event => {
 });
 
 $reverseLat.addEventListener('input', event => {
-  data.latitude = event.target.value;
   if ($reverseLat.validity.valid) {
     $reverseLatError.textContent = '';
     $reverseLatError.classname = 'error';
@@ -188,6 +176,24 @@ $geocode.addEventListener('input', () => {
 });
 
 // show error function for all form inputs
+
+function checkResponseForError(response, errorElement) {
+  if (!$loaderContainer.classList.contains('hide')) {
+    $loaderContainer.classList.toggle('hide-loader-container');
+  }
+  if (response.error) {
+    errorElement.textContent = `${response.error.code}: ${response.error.message}`;
+    return;
+  }
+  if (response.code && response.message) {
+    errorElement.textContent = `${response.message}`;
+    return;
+  }
+  if (response.features.length < 1) {
+    errorElement.textContent = 'Sorry that didn\'t yield any results';
+  }
+}
+
 function showError(element, errorElement) {
   if (element.validity.rangeUnderflow || element.validity.rangeOverflow) {
     errorElement.textContent = `Must be at least ${element.min} and less than ${element.max}`;
@@ -279,13 +285,12 @@ function getOpenRoutesJSON(url, params, callback) {
   xhr.send();
 }
 
-function getGeocode(event, startCoordinates) {
+function getGeocode() {
   var submittedAddress = $geocodeForm.elements.address.value;
-  // data.eventTarget = event.target.id;
   $loaderContainer.classList.toggle('hide-loader-container');
   getOpenRoutesJSON('/geocode/search', { text: submittedAddress }, function (response) {
     if (response.error || response.code || response.features.length < 1) {
-      checkResponseForError(response, $geocodeForm, $geocodeError);
+      checkResponseForError(response, $geocodeError);
       return;
     }
     var displayObject = {
@@ -296,18 +301,19 @@ function getGeocode(event, startCoordinates) {
     };
     getOpenRoutesJSON('/elevation/point', { geometry: displayObject.longitude + ',' + displayObject.latitude }, function (response) {
       if (response.error || response.code) {
-        checkResponseForError(response, $geocode, $geocodeError);
+        checkResponseForError(response, $geocodeError);
       }
       displayObject.elevation = response.geometry.coordinates[2];
       $loaderContainer.classList.toggle('hide-loader-container');
       displayPopupContent(displayObject);
+      $geocodeForm.reset();
+      toggleElement($geocodeForm);
     });
   });
 }
 
-/* function getReverseGeocode(event) {
+function getReverseGeocode(event) {
   var submittedLatLng = [];
-  data.eventTarget = event.target.id;
   if (event.target.id === 'reverse-geocode-form') {
     submittedLatLng.push($reverseGeocodeForm.elements.latitude.value);
     submittedLatLng.push($reverseGeocodeForm.elements.longitude.value);
@@ -317,131 +323,137 @@ function getGeocode(event, startCoordinates) {
   }
   $loaderContainer.classList.toggle('hide-loader-container');
   getOpenRoutesJSON('/geocode/reverse', { 'point.lat': submittedLatLng[0], 'point.lon': submittedLatLng[1] }, function (response) {
-    data.latitude = response.features[0].geometry.coordinates[1];
-    data.longitude = response.features[0].geometry.coordinates[0];
-    data.address = response.features[0].properties.label;
-    data.geoJSON = response.features[0];
-    getElevationAJAXRequest($reverseGeocodeForm, $reverseLatError);
-    if (event.target.id !== 'map') {
-      $dropdownContainer.classList.toggle('show-dropdown-container');
+    if (response.error || response.code || response.features.length < 1) {
+      checkResponseForError(response, $reverseLatError);
+      return;
     }
-    $loaderContainer.classList.toggle('hide-loader-container');
-  });
-} */
-
-function checkResponseForError(response, element, errorElement) {
-  if (!$loaderContainer.classList.contains('hide')) {
-    $loaderContainer.classList.toggle('hide-loader-container');
-  }
-  if (response.error) {
-    toggleElement(element);
-    errorElement.textContent = `${response.error.code}: ${response.error.message}`;
-    return;
-  }
-  if (response.code && response.message) {
-    toggleElement(element);
-    errorElement.textContent = `${response.code}: ${response.message}`;
-    return;
-  }
-  if (response.features.length < 1) {
-    toggleElement(element);
-    errorElement.textContent = 'Sorry that didn\'t yield any results';
-  }
-}
-
-function getBestRouteDestinationAJAXRequest(event) {
-  data.eventTarget = event.target.id;
-  data.address = $directionsForm.elements.destination.value;
-  var startCoordinates = [];
-  if (!data.latitude || !data.longitude) {
-    getOpenRoutesJSON('/geocode/search', { text: $start.value }, function (response) {
-      if (response.error || response.code) {
-        checkResponseForError(response, $directionsForm, $startError);
+    var displayObject = {
+      latitude: response.features[0].geometry.coordinates[1],
+      longitude: response.features[0].geometry.coordinates[0],
+      address: response.features[0].properties.label,
+      geoJSON: response.features[0]
+    };
+    getOpenRoutesJSON('/elevation/point', { geometry: displayObject.longitude + ',' + displayObject.latitude }, function (response) {
+      if (event.target.id !== 'map') {
         $dropdownContainer.classList.toggle('show-dropdown-container');
+      }
+      if (response.error || response.code) {
+        checkResponseForError(response, $reverseLatError);
         return;
       }
-      startCoordinates.push(response.features[0].geometry.coordinates[1]);
-      startCoordinates.push(response.features[0].geometry.coordinates[0]);
+      displayObject.elevation = response.geometry.coordinates[2];
+      $loaderContainer.classList.toggle('hide-loader-container');
+      displayPopupContent(displayObject);
+      $reverseGeocodeForm.reset();
+      toggleElement($reverseGeocodeForm);
     });
-  }
-  startCoordinates.push(data.latitude);
-  startCoordinates.push(data.longitude);
+  });
+}
+
+function getRoute(event) {
+  var startCoordinates = [];
+  var start = event.currentTarget.start.value;
+  var destination = event.currentTarget.destination.value;
   $loaderContainer.classList.toggle('hide-loader-container');
-  getOpenRoutesJSON('/geocode/search', { text: data.address }, function (response) {
+  getOpenRoutesJSON('/geocode/search', { text: start }, function (response) {
     if (response.error || response.code) {
-      checkResponseForError(response, $directionsForm, $startError);
+      checkResponseForError(response, $startError);
       $dropdownContainer.classList.toggle('show-dropdown-container');
       return;
     }
-    var routeParameters = {
-      start: startCoordinates[1] + ',' + startCoordinates[0],
-      end: response.features[0].geometry.coordinates[0] + ',' + response.features[0].geometry.coordinates[1]
-    };
-    getOpenRoutesJSON('/v2/directions/driving-car', routeParameters, function (response) {
+    startCoordinates.push(response.features[0].geometry.coordinates[1]);
+    startCoordinates.push(response.features[0].geometry.coordinates[0]);
+    getOpenRoutesJSON('/geocode/search', { text: destination }, function (response) {
       if (response.error || response.code) {
-        checkResponseForError(response, $directionsForm, $startError);
-        $loaderContainer.classList.toggle('hide-loader-container');
+        // hande a click from the directions button popup that loads the popups current address
+        // also handle just clicking in and changing the value
+        checkResponseForError(response, $destinationError);
+        $dropdownContainer.classList.toggle('show-dropdown-container');
         return;
       }
-      markupLayer.closePopup();
-      markupLayer.clearLayers();
-      markupLayer.unbindPopup();
-      markupLayer.addData(response.features[0]);
-      map.fitBounds(markupLayer.getBounds());
-      var routeCoordinates = response.features[0].geometry.coordinates;
-      // eslint-disable-next-line no-undef
-      markupLayer.addData(L.marker([routeCoordinates[0][1], routeCoordinates[0][0]]).toGeoJSON());
-      // eslint-disable-next-line no-undef
-      markupLayer.addData(L.marker([routeCoordinates[routeCoordinates.length - 1][1], routeCoordinates[routeCoordinates.length - 1][0]]).toGeoJSON());
-      $loaderContainer.classList.toggle('hide-loader-container');
+      var routeParameters = {
+        start: startCoordinates[1] + ',' + startCoordinates[0],
+        end: response.features[0].geometry.coordinates[0] + ',' + response.features[0].geometry.coordinates[1]
+      };
+      getOpenRoutesJSON('/v2/directions/driving-car', routeParameters, function (response) {
+        if (response.error || response.code) {
+          checkResponseForError(response, $startError);
+          $dropdownContainer.classList.toggle('show-dropdown-container');
+          return;
+        }
+        markupLayer.closePopup();
+        markupLayer.clearLayers();
+        markupLayer.unbindPopup();
+        markupLayer.addData(response.features[0]);
+        map.fitBounds(markupLayer.getBounds());
+        var routeCoordinates = response.features[0].geometry.coordinates;
+        // eslint-disable-next-line no-undef
+        markupLayer.addData(L.marker([routeCoordinates[0][1], routeCoordinates[0][0]]).toGeoJSON());
+        // eslint-disable-next-line no-undef
+        markupLayer.addData(L.marker([routeCoordinates[routeCoordinates.length - 1][1], routeCoordinates[routeCoordinates.length - 1][0]]).toGeoJSON());
+        $loaderContainer.classList.toggle('hide-loader-container');
+        $directionsForm.reset();
+        toggleElement($directionsForm);
+      });
+      $dropdownContainer.classList.toggle('show-dropdown-container');
     });
-    $dropdownContainer.classList.toggle('show-dropdown-container');
   });
 }
 
 function getPOIs(event) {
-  var bufferDistance;
-  data.eventTarget = event.target.id;
-  bufferDistance = event.target.elements.buffer.value;
-  var requestBody = {
-    request: 'pois',
-    geometry: {
-      geojson: {
-        type: 'Point',
-        coordinates: [data.longitude, data.latitude]
-      },
-      buffer: bufferDistance
+  var bufferDistance = event.target.elements.buffer.value;
+  var bufferAddress = event.target.elements['buffer-address'].value;
+  $loaderContainer.classList.toggle('hide-loader-container');
+  getOpenRoutesJSON('/geocode/search', { text: bufferAddress }, function (response) {
+    if (response.error || response.code || response.features.length < 1) {
+      checkResponseForError(response, $bufferAddressError);
+      $dropdownContainer.classList.toggle('show-dropdown-container');
+      return;
     }
-  };
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', 'https://api.openrouteservice.org/pois');
-  xhr.setRequestHeader('authorization', '5b3ce3597851110001cf62489e44bfb8d57d4a17b815aa9f855e19da');
-  xhr.setRequestHeader('content-type', 'application/json;charset=UTF-8');
-  xhr.responseType = 'json';
-  xhr.addEventListener('load', function () {
-    var poisArray = xhr.response.features;
-    var markersArray = [];
-    poisArray.forEach(element => {
-      // eslint-disable-next-line no-undef
-      var marker = L.marker([element.geometry.coordinates[1], element.geometry.coordinates[0]]);
-      var osmID = Object.keys(element.properties.category_ids);
-      var poiName;
-      if (element.properties.osm_tags) {
-        poiName = element.properties.osm_tags.name;
-      } else {
-        poiName = 'Name not found!';
+    map.setView([response.features[0].geometry.coordinates[1], response.features[0].geometry.coordinates[0]]);
+    var requestBody = {
+      request: 'pois',
+      geometry: {
+        geojson: {
+          type: 'Point',
+          coordinates: [response.features[0].geometry.coordinates[0], response.features[0].geometry.coordinates[1]]
+        },
+        buffer: bufferDistance
       }
-      marker.bindPopup(`
+    };
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://api.openrouteservice.org/pois');
+    xhr.setRequestHeader('authorization', '5b3ce3597851110001cf62489e44bfb8d57d4a17b815aa9f855e19da');
+    xhr.setRequestHeader('content-type', 'application/json;charset=UTF-8');
+    xhr.responseType = 'json';
+    xhr.addEventListener('load', function () {
+      markupLayer.clearLayers();
+      var poisArray = xhr.response.features;
+      var markersArray = [];
+      poisArray.forEach(element => {
+        // eslint-disable-next-line no-undef
+        var marker = L.marker([element.geometry.coordinates[1], element.geometry.coordinates[0]]);
+        var osmID = Object.keys(element.properties.category_ids);
+        var poiName;
+        if (element.properties.osm_tags) {
+          poiName = element.properties.osm_tags.name;
+        } else {
+          poiName = 'Name not found!';
+        }
+        marker.bindPopup(`
         <p>POI category: ${element.properties.category_ids[osmID[0]].category_name}</p>
         <p>Name: ${poiName}</p>
       `);
-      markersArray.push(marker);
+        markersArray.push(marker);
+      });
+      // eslint-disable-next-line no-undef
+      var layerGroup = L.layerGroup(markersArray);
+      layerGroup.addTo(markupLayer);
+      $loaderContainer.classList.toggle('hide-loader-container');
+      $poisForm.reset();
+      toggleElement($poisForm);
     });
-    // eslint-disable-next-line no-undef
-    var layerGroup = L.layerGroup(markersArray);
-    layerGroup.addTo(markupLayer);
-    $loaderContainer.classList.toggle('hide-loader-container');
+    xhr.send(JSON.stringify(requestBody));
   });
-  xhr.send(JSON.stringify(requestBody));
-  $loaderContainer.classList.toggle('hide-loader-container');
+
 }
