@@ -159,6 +159,15 @@ button {
   width: 100%;
 }
 
+#directions-form {
+  overflow-y: scroll;
+}
+
+.instruction {
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+}
+
 .directions-button {
   background-color: #5fd068;
   border-radius: 10px;

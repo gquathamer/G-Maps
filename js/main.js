@@ -31,6 +31,7 @@ var $reverseLng = document.querySelector('#longitude');
 var $reverseLngError = document.querySelector('#longitude + span.error');
 var $geocode = document.querySelector('#geocode-address');
 var $geocodeError = document.querySelector('#geocode-address + span.error');
+var $routeInstructions = document.querySelector('#route-instructions');
 
 map.addEventListener('click', function (event) {
   event.target.id = 'map';
@@ -356,7 +357,7 @@ function getRoute(event) {
   var destination = event.currentTarget.destination.value;
   $loaderContainer.classList.toggle('hide-loader-container');
   getOpenRoutesJSON('/geocode/search', { text: start }, function (response) {
-    if (response.error || response.code) {
+    if (response.error || response.code || response.features.length < 1) {
       checkResponseForError(response, $startError);
       $dropdownContainer.classList.toggle('show-dropdown-container');
       return;
@@ -364,7 +365,7 @@ function getRoute(event) {
     startCoordinates.push(response.features[0].geometry.coordinates[1]);
     startCoordinates.push(response.features[0].geometry.coordinates[0]);
     getOpenRoutesJSON('/geocode/search', { text: destination }, function (response) {
-      if (response.error || response.code) {
+      if (response.error || response.code || response.features.length < 1) {
         // hande a click from the directions button popup that loads the popups current address
         // also handle just clicking in and changing the value
         checkResponseForError(response, $destinationError);
@@ -376,11 +377,12 @@ function getRoute(event) {
         end: response.features[0].geometry.coordinates[0] + ',' + response.features[0].geometry.coordinates[1]
       };
       getOpenRoutesJSON('/v2/directions/driving-car', routeParameters, function (response) {
-        if (response.error || response.code) {
+        if (response.error || response.code || response.features.length < 1) {
           checkResponseForError(response, $startError);
           $dropdownContainer.classList.toggle('show-dropdown-container');
           return;
         }
+        var steps = response.features[0].properties.segments[0].steps;
         markupLayer.closePopup();
         markupLayer.clearLayers();
         markupLayer.unbindPopup();
@@ -391,9 +393,31 @@ function getRoute(event) {
         markupLayer.addData(L.marker([routeCoordinates[0][1], routeCoordinates[0][0]]).toGeoJSON());
         // eslint-disable-next-line no-undef
         markupLayer.addData(L.marker([routeCoordinates[routeCoordinates.length - 1][1], routeCoordinates[routeCoordinates.length - 1][0]]).toGeoJSON());
+        var totalTripStats = document.createElement('div');
+        var totalTripTime = document.createElement('p');
+        totalTripTime.textContent = `${Math.floor(response.features[0].properties.summary.duration / 60)} minutes`;
+        totalTripStats.appendChild(totalTripTime);
+        var totalTripDistance = document.createElement('p');
+        totalTripDistance.textContent = `${Math.floor(response.features[0].properties.summary.distance * 0.000621)} miles`;
+        totalTripStats.appendChild(totalTripDistance);
+        var instructionsElementsArray = [totalTripStats];
+        instructionsElementsArray = instructionsElementsArray.concat(steps.map((elem, idx) => {
+          var instructionDiv = document.createElement('div');
+          instructionDiv.classList.add('instruction');
+          var instruction = document.createElement('p');
+          instruction.textContent = `Step ${idx + 1}: ${elem.instruction}`;
+          instructionDiv.appendChild(instruction);
+          var distance = document.createElement('p');
+          distance.textContent = `Distance: ${elem.distance * 0.000621} miles`;
+          instructionDiv.appendChild(distance);
+          var minutes = document.createElement('p');
+          minutes.textContent = `Travel time for this step: ${elem.duration / 60} minutes`;
+          instructionDiv.appendChild(minutes);
+          return instructionDiv;
+        }));
+        $routeInstructions.replaceChildren(...instructionsElementsArray);
         $loaderContainer.classList.toggle('hide-loader-container');
         $directionsForm.reset();
-        toggleElement($directionsForm);
       });
       $dropdownContainer.classList.toggle('show-dropdown-container');
     });
