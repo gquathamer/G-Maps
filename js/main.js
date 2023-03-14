@@ -7,8 +7,13 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 // eslint-disable-next-line no-undef
 var markupLayer = L.geoJSON().addTo(map);
+// eslint-disable-next-line no-undef
+var highlightLayer = L.geoJSON(null, {
+  style: function () {
+    return { color: 'red' };
+  }
+}).addTo(map);
 var $barContainer = document.querySelector('.bar-container');
-// var $map = document.querySelector('#map');
 var $dropdownContainer = document.querySelector('.dropdown-container');
 var $geocodeForm = document.querySelector('#geocode-form');
 var $reverseGeocodeForm = document.querySelector('#reverse-geocode-form');
@@ -417,6 +422,15 @@ function getRoute(event) {
           var minutes = document.createElement('p');
           minutes.textContent = `Travel time for this step: ${Number(elem.duration / 60).toFixed(2)} minutes`;
           instructionDiv.appendChild(minutes);
+          instructionDiv.addEventListener('mouseenter', event => {
+            highlightLayer.addData({
+              type: 'LineString',
+              coordinates: response.features[0].geometry.coordinates.slice(steps[idx].way_points[0], steps[idx].way_points[1])
+            });
+          });
+          instructionDiv.addEventListener('mouseleave', event => {
+            highlightLayer.clearLayers();
+          });
           return instructionDiv;
         }));
         $routeInstructions.replaceChildren(...instructionsElementsArray);
