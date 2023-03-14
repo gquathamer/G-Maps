@@ -1,26 +1,39 @@
-.container {
-  max-width: 992px;
-  margin: 0 auto;
-  display: flex;
-  outline: solid #4b8673;
-}
-
 html,
 body,
 #map {
   height: 100%;
   width: 100%;
+  position: absolute;
+}
+
+.container {
+  margin: 0 auto;
+  display: flex;
 }
 
 .row {
   display: flex;
   padding: 0 1rem;
+  flex-wrap: wrap;
 }
 
 .column-third,
 .column-three-quarter,
 .column-full {
   flex-basis: 100%;
+}
+
+.column-one-tenth {
+  flex-basis: 10%;
+}
+
+.column-eight-tenth {
+  flex-basis: 80%;
+}
+
+.column-wrap {
+  flex-direction: column;
+  padding: 0;
 }
 
 .justify-center {
@@ -31,8 +44,22 @@ body,
   display: none;
 }
 
-.dropdown-container-desktop {
-  display: none;
+.dropdown-container {
+  position: absolute;
+  top: -1000px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transition: top 500ms ease;
+  background-color: white;
+  z-index: 1000;
+  height: 90vh;
+  width: 100%;
+  flex-wrap: nowrap;
+}
+
+.show-dropdown-container {
+  top: 0;
 }
 
 @media screen and (min-width: 576px) {
@@ -64,13 +91,42 @@ body,
     display: none;
   }
 
-  .dropdown-container-desktop {
-    flex-basis: 33%;
-    display: block;
+  .dropdown-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: white;
+    z-index: 1000;
+    height: 90vh;
+    width: 33.33%;
+  }
+
+  .show-dropdown-container {
+    top: 0;
   }
 
   #map {
     height: 100%;
-    flex-basis: 67%;
+    width: 66.67%;
+    position: absolute;
+    right: 0;
+  }
+
+  form input {
+    flex-basis: 100%;
+    max-width: 300px;
+  }
+
+  form label {
+    flex-basis: 100%;
+    max-width: 300px;
+  }
+}
+
+@media screen and (min-width: 1896px) {
+  span.error {
+    text-align: right;
   }
 }
