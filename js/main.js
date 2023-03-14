@@ -32,6 +32,7 @@ var $reverseLngError = document.querySelector('#longitude + span.error');
 var $geocode = document.querySelector('#geocode-address');
 var $geocodeError = document.querySelector('#geocode-address + span.error');
 var $routeInstructions = document.querySelector('#route-instructions');
+var $poiResults = document.querySelector('#pois-results');
 
 map.addEventListener('click', function (event) {
   event.target.id = 'map';
@@ -87,11 +88,13 @@ $directionsForm.addEventListener('submit', function (event) {
     event.preventDefault();
     return;
   }
+  $startError.textContent = '';
   if (!$destination.validity.valid) {
     showError($destination, $destinationError);
     event.preventDefault();
     return;
   }
+  $destinationError.textContent = '';
   event.preventDefault();
   getRoute(event);
 });
@@ -394,11 +397,12 @@ function getRoute(event) {
         // eslint-disable-next-line no-undef
         markupLayer.addData(L.marker([routeCoordinates[routeCoordinates.length - 1][1], routeCoordinates[routeCoordinates.length - 1][0]]).toGeoJSON());
         var totalTripStats = document.createElement('div');
+        totalTripStats.classList.add('instruction');
         var totalTripTime = document.createElement('p');
-        totalTripTime.textContent = `${Math.floor(response.features[0].properties.summary.duration / 60)} minutes`;
+        totalTripTime.textContent = `Total trip time: ${Math.floor(response.features[0].properties.summary.duration / 60)} minutes`;
         totalTripStats.appendChild(totalTripTime);
         var totalTripDistance = document.createElement('p');
-        totalTripDistance.textContent = `${Math.floor(response.features[0].properties.summary.distance * 0.000621)} miles`;
+        totalTripDistance.textContent = `Total trip distance: ${Math.floor(response.features[0].properties.summary.distance * 0.000621)} miles`;
         totalTripStats.appendChild(totalTripDistance);
         var instructionsElementsArray = [totalTripStats];
         instructionsElementsArray = instructionsElementsArray.concat(steps.map((elem, idx) => {
@@ -408,10 +412,10 @@ function getRoute(event) {
           instruction.textContent = `Step ${idx + 1}: ${elem.instruction}`;
           instructionDiv.appendChild(instruction);
           var distance = document.createElement('p');
-          distance.textContent = `Distance: ${elem.distance * 0.000621} miles`;
+          distance.textContent = `Distance: ${Number(elem.distance * 0.000621).toFixed(2)} miles`;
           instructionDiv.appendChild(distance);
           var minutes = document.createElement('p');
-          minutes.textContent = `Travel time for this step: ${elem.duration / 60} minutes`;
+          minutes.textContent = `Travel time for this step: ${Number(elem.duration / 60).toFixed(2)} minutes`;
           instructionDiv.appendChild(minutes);
           return instructionDiv;
         }));
@@ -454,28 +458,51 @@ function getPOIs(event) {
       markupLayer.clearLayers();
       var poisArray = xhr.response.features;
       var markersArray = [];
-      poisArray.forEach(element => {
+      // This acts as the first item in results list, showing total results
+      var poiSummary = document.createElement('div');
+      poiSummary.classList.add('poi-result');
+      var poiStats = document.createElement('p');
+      poiStats.textContent = `Found ${poisArray.length} results`;
+      poiSummary.appendChild(poiStats);
+      var poiElementsArray = [poiSummary];
+      // creating an array of dom elements to append to bottom of poi form
+      poiElementsArray = poiElementsArray.concat(poisArray.map(element => {
         // eslint-disable-next-line no-undef
         var marker = L.marker([element.geometry.coordinates[1], element.geometry.coordinates[0]]);
         var osmID = Object.keys(element.properties.category_ids);
         var poiName;
         if (element.properties.osm_tags) {
-          poiName = element.properties.osm_tags.name;
+          poiName = element.properties.osm_tags.name.toUpperCase();
         } else {
           poiName = 'Name not found!';
         }
         marker.bindPopup(`
-        <p>POI category: ${element.properties.category_ids[osmID[0]].category_name}</p>
+        <p>POI category: ${element.properties.category_ids[osmID[0]].category_name.toUpperCase()}</p>
         <p>Name: ${poiName}</p>
       `);
         markersArray.push(marker);
-      });
+        var poiDiv = document.createElement('div');
+        poiDiv.classList.add('poi-result');
+        var poiCategory = document.createElement('p');
+        poiCategory.textContent = element.properties.category_ids[osmID[0]].category_name.toUpperCase();
+        poiDiv.appendChild(poiCategory);
+        var nameOfPOI = document.createElement('p');
+        nameOfPOI.textContent = poiName;
+        poiDiv.appendChild(nameOfPOI);
+        poiDiv.addEventListener('mouseenter', event => {
+          marker.openPopup();
+        });
+        poiDiv.addEventListener('mouseleave', event => {
+          marker.closePopup();
+        });
+        return poiDiv;
+      }));
+      $poiResults.replaceChildren(...poiElementsArray);
       // eslint-disable-next-line no-undef
       var layerGroup = L.layerGroup(markersArray);
       layerGroup.addTo(markupLayer);
       $loaderContainer.classList.toggle('hide-loader-container');
       $poisForm.reset();
-      toggleElement($poisForm);
     });
     xhr.send(JSON.stringify(requestBody));
   });
