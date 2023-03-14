@@ -20,8 +20,6 @@ var $reverseGeocodeForm = document.querySelector('#reverse-geocode-form');
 var $directionsForm = document.querySelector('#directions-form');
 var $poisForm = document.querySelector('#pois-form');
 var $loaderContainer = document.querySelector('.loader-container');
-var $directionsButtonOnThePopup;
-var $poiButtonOnThePopup;
 var $radius = document.querySelector('#buffer');
 var $radiusError = document.querySelector('#buffer + span.error');
 var $bufferAddress = document.querySelector('#buffer-address');
@@ -50,13 +48,13 @@ $barContainer.addEventListener('click', function () {
 
 $dropdownContainer.addEventListener('click', function (event) {
   if (event.target.tagName === 'I' && event.target.closest('DIV').id === 'geocode-menu') {
-    toggleElement($geocodeForm);
+    $geocodeForm.classList.toggle('show');
   } else if (event.target.tagName === 'I' && event.target.closest('DIV').id === 'reverse-geocode-menu') {
-    toggleElement($reverseGeocodeForm);
+    $reverseGeocodeForm.classList.toggle('show');
   } else if (event.target.tagName === 'I' && event.target.closest('DIV').id === 'directions-menu') {
-    toggleElement($directionsForm);
+    $directionsForm.classList.toggle('show');
   } else if (event.target.tagName === 'I' && event.target.closest('DIV').id === 'pois-menu') {
-    toggleElement($poisForm);
+    $poisForm.classList.toggle('show');
   }
 });
 
@@ -225,11 +223,6 @@ function showError(element, errorElement) {
   }
 }
 
-function toggleElement(element) {
-  element.classList.toggle('show');
-  element.classList.toggle('hide');
-}
-
 function createPopupContent(displayObject) {
   var popupDiv = document.createElement('div');
   popupDiv.setAttribute('class', 'popup-div');
@@ -252,32 +245,31 @@ function createPopupContent(displayObject) {
   directionsButton.setAttribute('class', 'popup-button');
   directionsButton.textContent = 'Directions';
   buttonDiv.appendChild(directionsButton);
+  directionsButton.addEventListener('click', function (event) {
+    $directionsForm.classList.toggle('show');
+    $start.value = displayObject.address;
+    $dropdownContainer.classList.toggle('show-dropdown-container');
+  });
   var poiButton = document.createElement('button');
   poiButton.setAttribute('id', 'poi-button');
   poiButton.setAttribute('class', 'popup-button');
   poiButton.textContent = 'POI';
   buttonDiv.appendChild(poiButton);
   popupDiv.appendChild(buttonDiv);
+  poiButton.addEventListener('click', function (event) {
+    $poisForm.classList.toggle('show');
+    $bufferAddress.value = displayObject.address;
+    $dropdownContainer.classList.toggle('show-dropdown-container');
+  });
   return popupDiv;
 }
 
 function displayPopupContent(displayObject) {
-  markupLayer.clearLayers();
   markupLayer.unbindPopup();
+  markupLayer.clearLayers();
   markupLayer.addData(displayObject.geoJSON);
   markupLayer.bindPopup(createPopupContent(displayObject));
   markupLayer.openPopup();
-  $directionsButtonOnThePopup = document.querySelector('#directions-button');
-  $poiButtonOnThePopup = document.querySelector('#poi-button');
-  $directionsButtonOnThePopup.addEventListener('click', function (event) {
-    toggleElement($directionsForm);
-    $dropdownContainer.classList.toggle('show-dropdown-container');
-    document.querySelector('#start').value = data.address;
-  });
-  $poiButtonOnThePopup.addEventListener('click', function (event) {
-    toggleElement($poisForm);
-    $dropdownContainer.classList.toggle('show-dropdown-container');
-  });
   map.setView(markupLayer.getLayers()[0]._latlng);
 }
 
@@ -316,7 +308,7 @@ function getGeocode() {
       $loaderContainer.classList.toggle('hide-loader-container');
       displayPopupContent(displayObject);
       $geocodeForm.reset();
-      toggleElement($geocodeForm);
+      $geocodeForm.classList.toggle('show');
     });
   });
 }
@@ -354,7 +346,6 @@ function getReverseGeocode(event) {
       $loaderContainer.classList.toggle('hide-loader-container');
       displayPopupContent(displayObject);
       $reverseGeocodeForm.reset();
-      toggleElement($reverseGeocodeForm);
     });
   });
 }
@@ -396,11 +387,11 @@ function getRoute(event) {
         markupLayer.unbindPopup();
         markupLayer.addData(response.features[0]);
         map.fitBounds(markupLayer.getBounds());
-        var routeCoordinates = response.features[0].geometry.coordinates;
+        // var routeCoordinates = response.features[0].geometry.coordinates;
         // eslint-disable-next-line no-undef
-        markupLayer.addData(L.marker([routeCoordinates[0][1], routeCoordinates[0][0]]).toGeoJSON());
+        // markupLayer.addData(L.marker([routeCoordinates[0][1], routeCoordinates[0][0]]).toGeoJSON());
         // eslint-disable-next-line no-undef
-        markupLayer.addData(L.marker([routeCoordinates[routeCoordinates.length - 1][1], routeCoordinates[routeCoordinates.length - 1][0]]).toGeoJSON());
+        // markupLayer.addData(L.marker([routeCoordinates[routeCoordinates.length - 1][1], routeCoordinates[routeCoordinates.length - 1][0]]).toGeoJSON());
         var totalTripStats = document.createElement('div');
         totalTripStats.classList.add('instruction');
         var totalTripTime = document.createElement('p');
@@ -469,6 +460,8 @@ function getPOIs(event) {
     xhr.setRequestHeader('content-type', 'application/json;charset=UTF-8');
     xhr.responseType = 'json';
     xhr.addEventListener('load', function () {
+      markupLayer.closePopup();
+      markupLayer.unbindPopup();
       markupLayer.clearLayers();
       var poisArray = xhr.response.features;
       var markersArray = [];
@@ -485,7 +478,7 @@ function getPOIs(event) {
         var marker = L.marker([element.geometry.coordinates[1], element.geometry.coordinates[0]]);
         var osmID = Object.keys(element.properties.category_ids);
         var poiName;
-        if (element.properties.osm_tags) {
+        if (element.properties.osm_tags?.name) {
           poiName = element.properties.osm_tags.name.toUpperCase();
         } else {
           poiName = 'Name not found!';
