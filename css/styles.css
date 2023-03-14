@@ -12,14 +12,12 @@ form {
 }
 
 label {
-  font-family: roboto, "open sans", sans-serif;
   padding: 0.5rem 0;
 }
 
 input {
   background-color: rgba(182, 182, 182, 0.75);
   padding: 0.5rem;
-  font-family: roboto, "open sans", sans-serif;
   width: 100%;
 }
 
@@ -34,24 +32,17 @@ input:focus:invalid {
 button {
   background-color: #5fd068;
   border-radius: 10px;
-  font-family: roboto, "open sans", sans-serif;
   padding: 0.25rem;
+  width: 40%;
 }
 
-.error {
-  width: 100%;
-  padding: 0.5rem 0;
-  font-size: 80%;
-  color: red;
-  box-sizing: border-box;
+button:hover,
+i:hover {
+  cursor: pointer;
 }
 
 .show {
   display: block;
-}
-
-.show-flex {
-  display: flex;
 }
 
 .hide {
@@ -60,6 +51,14 @@ button {
 
 .dark-green-background {
   background-color: #4b8673;
+}
+
+.gray-background {
+  background-color: #b6b6b6;
+}
+
+.relative {
+  position: relative;
 }
 
 .white-text {
@@ -74,14 +73,12 @@ button {
   justify-content: end;
 }
 
-.align-items {
-  align-items: center;
+.justify-center {
+  justify-content: start;
 }
 
-.bar-container {
-  border-radius: 10px;
-  border: white solid 2px;
-  padding: 0.5rem;
+.align-items {
+  align-items: center;
 }
 
 .height-90 {
@@ -90,23 +87,6 @@ button {
 
 .height-10 {
   height: 10%;
-}
-
-.position-relative {
-  position: relative;
-}
-
-.navbar {
-  z-index: 1001;
-  height: 10%;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #4b8673;
-  position: relative;
-}
-
-.gray-background {
-  background-color: #b6b6b6;
 }
 
 .bottom-border {
@@ -121,6 +101,29 @@ button {
   padding: 0;
 }
 
+.error {
+  width: 100%;
+  padding: 0.5rem 0;
+  font-size: 80%;
+  color: red;
+  box-sizing: border-box;
+}
+
+.bar-container {
+  border-radius: 10px;
+  border: white solid 2px;
+  padding: 0.5rem;
+}
+
+.navbar {
+  z-index: 1001;
+  height: 10%;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #4b8673;
+  position: relative;
+}
+
 .popup-div {
   margin: 0;
   padding: 0;
@@ -129,40 +132,6 @@ button {
 .button-div {
   display: flex;
   justify-content: space-around;
-}
-
-.popup-button {
-  background-color: #5fd068;
-  border-radius: 10px;
-  font-family:
-    roboto,
-    "open sans",
-    sans-serif;
-  width: 40%;
-}
-
-#geocode-desktop-form {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 401;
-  width: 40%;
-}
-
-#geocode-desktop-form input {
-  background-color: white;
-  border-radius: 10px;
-  padding: 5px;
-  font-family:
-    roboto,
-    "open sans",
-    sans-serif;
-  width: 100%;
-}
-
-#directions-form,
-#pois-form {
-  overflow-y: scroll;
 }
 
 .instruction,
@@ -178,24 +147,7 @@ button {
 
 .instruction:hover,
 .poi-result:hover {
-  background-color: rgba(182, 182, 182, 0.75);
-}
-
-.directions-button {
-  background-color: #5fd068;
-  border-radius: 10px;
-  font-family:
-    roboto,
-    "open sans",
-    sans-serif;
-}
-
-.cursor {
-  cursor: pointer;
-}
-
-.relative {
-  position: relative;
+  background-color: rgba(182, 182, 182, 0.5);
 }
 
 .loader-container {
@@ -222,6 +174,11 @@ button {
   width: 6rem;
   height: 6rem;
   animation: spin 1s linear infinite;
+}
+
+#directions-form,
+#pois-form {
+  overflow-y: scroll;
 }
 
 @keyframes spin {

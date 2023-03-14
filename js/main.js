@@ -307,8 +307,8 @@ function getGeocode() {
       displayObject.elevation = response.geometry.coordinates[2];
       $loaderContainer.classList.toggle('hide-loader-container');
       displayPopupContent(displayObject);
+      $dropdownContainer.classList.toggle('show-dropdown-container');
       $geocodeForm.reset();
-      $geocodeForm.classList.toggle('show');
     });
   });
 }
@@ -345,6 +345,7 @@ function getReverseGeocode(event) {
       displayObject.elevation = response.geometry.coordinates[2];
       $loaderContainer.classList.toggle('hide-loader-container');
       displayPopupContent(displayObject);
+      $dropdownContainer.classList.toggle('show-dropdown-container');
       $reverseGeocodeForm.reset();
     });
   });
@@ -365,8 +366,6 @@ function getRoute(event) {
     startCoordinates.push(response.features[0].geometry.coordinates[0]);
     getOpenRoutesJSON('/geocode/search', { text: destination }, function (response) {
       if (response.error || response.code || response.features.length < 1) {
-        // hande a click from the directions button popup that loads the popups current address
-        // also handle just clicking in and changing the value
         checkResponseForError(response, $destinationError);
         $dropdownContainer.classList.toggle('show-dropdown-container');
         return;
@@ -387,11 +386,6 @@ function getRoute(event) {
         markupLayer.unbindPopup();
         markupLayer.addData(response.features[0]);
         map.fitBounds(markupLayer.getBounds());
-        // var routeCoordinates = response.features[0].geometry.coordinates;
-        // eslint-disable-next-line no-undef
-        // markupLayer.addData(L.marker([routeCoordinates[0][1], routeCoordinates[0][0]]).toGeoJSON());
-        // eslint-disable-next-line no-undef
-        // markupLayer.addData(L.marker([routeCoordinates[routeCoordinates.length - 1][1], routeCoordinates[routeCoordinates.length - 1][0]]).toGeoJSON());
         var totalTripStats = document.createElement('div');
         totalTripStats.classList.add('instruction');
         var totalTripTime = document.createElement('p');
@@ -465,14 +459,12 @@ function getPOIs(event) {
       markupLayer.clearLayers();
       var poisArray = xhr.response.features;
       var markersArray = [];
-      // This acts as the first item in results list, showing total results
       var poiSummary = document.createElement('div');
       poiSummary.classList.add('poi-result');
       var poiStats = document.createElement('p');
       poiStats.textContent = `Found ${poisArray.length} results`;
       poiSummary.appendChild(poiStats);
       var poiElementsArray = [poiSummary];
-      // creating an array of dom elements to append to bottom of poi form
       poiElementsArray = poiElementsArray.concat(poisArray.map(element => {
         // eslint-disable-next-line no-undef
         var marker = L.marker([element.geometry.coordinates[1], element.geometry.coordinates[0]]);

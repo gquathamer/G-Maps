@@ -36,14 +36,6 @@ body,
   padding: 0;
 }
 
-.justify-center {
-  justify-content: start;
-}
-
-#geocode-desktop-form {
-  display: none;
-}
-
 .dropdown-container {
   position: absolute;
   top: -1000px;
@@ -81,10 +73,6 @@ body,
 
   .justify-center {
     justify-content: center;
-  }
-
-  #geocode-desktop-form {
-    display: block;
   }
 
   .bar-container {
