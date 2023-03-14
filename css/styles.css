@@ -8,6 +8,7 @@ body {
 form {
   padding: 1rem;
   border-bottom: 1px solid black;
+  display: none;
 }
 
 label {
@@ -157,6 +158,27 @@ button {
     "open sans",
     sans-serif;
   width: 100%;
+}
+
+#directions-form,
+#pois-form {
+  overflow-y: scroll;
+}
+
+.instruction,
+.poi-result {
+  border-bottom: 1px solid black;
+  padding: 1rem;
+}
+
+.instruction p,
+.poi-result p {
+  margin-top: 0;
+}
+
+.instruction:hover,
+.poi-result:hover {
+  background-color: rgba(182, 182, 182, 0.75);
 }
 
 .directions-button {

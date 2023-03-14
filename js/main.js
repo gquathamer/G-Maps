@@ -7,18 +7,23 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 // eslint-disable-next-line no-undef
 var markupLayer = L.geoJSON().addTo(map);
+// eslint-disable-next-line no-undef
+var highlightLayer = L.geoJSON(null, {
+  style: function () {
+    return { color: 'red' };
+  }
+}).addTo(map);
 var $barContainer = document.querySelector('.bar-container');
-// var $map = document.querySelector('#map');
 var $dropdownContainer = document.querySelector('.dropdown-container');
 var $geocodeForm = document.querySelector('#geocode-form');
 var $reverseGeocodeForm = document.querySelector('#reverse-geocode-form');
 var $directionsForm = document.querySelector('#directions-form');
 var $poisForm = document.querySelector('#pois-form');
 var $loaderContainer = document.querySelector('.loader-container');
-var $directionsButtonOnThePopup;
-var $poiButtonOnThePopup;
 var $radius = document.querySelector('#buffer');
 var $radiusError = document.querySelector('#buffer + span.error');
+var $bufferAddress = document.querySelector('#buffer-address');
+var $bufferAddressError = document.querySelector('#buffer-address + span.error');
 var $start = document.querySelector('#start');
 var $startError = document.querySelector('#start + span.error');
 var $destination = document.querySelector('#destination');
@@ -29,6 +34,8 @@ var $reverseLng = document.querySelector('#longitude');
 var $reverseLngError = document.querySelector('#longitude + span.error');
 var $geocode = document.querySelector('#geocode-address');
 var $geocodeError = document.querySelector('#geocode-address + span.error');
+var $routeInstructions = document.querySelector('#route-instructions');
+var $poiResults = document.querySelector('#pois-results');
 
 map.addEventListener('click', function (event) {
   event.target.id = 'map';
@@ -41,13 +48,13 @@ $barContainer.addEventListener('click', function () {
 
 $dropdownContainer.addEventListener('click', function (event) {
   if (event.target.tagName === 'I' && event.target.closest('DIV').id === 'geocode-menu') {
-    toggleElement($geocodeForm);
+    $geocodeForm.classList.toggle('show');
   } else if (event.target.tagName === 'I' && event.target.closest('DIV').id === 'reverse-geocode-menu') {
-    toggleElement($reverseGeocodeForm);
+    $reverseGeocodeForm.classList.toggle('show');
   } else if (event.target.tagName === 'I' && event.target.closest('DIV').id === 'directions-menu') {
-    toggleElement($directionsForm);
+    $directionsForm.classList.toggle('show');
   } else if (event.target.tagName === 'I' && event.target.closest('DIV').id === 'pois-menu') {
-    toggleElement($poisForm);
+    $poisForm.classList.toggle('show');
   }
 });
 
@@ -60,9 +67,7 @@ $geocodeForm.addEventListener('submit', function (event) {
     return;
   }
   event.preventDefault();
-  getGeocode(event);
-  $geocodeForm.reset();
-  toggleElement($geocodeForm);
+  getGeocode();
 });
 
 $reverseGeocodeForm.addEventListener('submit', function (event) {
@@ -78,32 +83,23 @@ $reverseGeocodeForm.addEventListener('submit', function (event) {
   }
   event.preventDefault();
   getReverseGeocode(event);
-  $reverseGeocodeForm.reset();
-  toggleElement($reverseGeocodeForm);
 });
 
 $directionsForm.addEventListener('submit', function (event) {
-  if (!data.latitude || !data.longitude) {
-    $startError.textContent = 'Please select a location on the map or use the geocoder tool to get a starting point!';
-    event.preventDefault();
-    return;
-  }
   if (!$start.validity.valid) {
     showError($start, $startError);
     event.preventDefault();
     return;
   }
+  $startError.textContent = '';
   if (!$destination.validity.valid) {
     showError($destination, $destinationError);
     event.preventDefault();
     return;
   }
-  event.preventDefault();
-  $startError.textContent = '';
   $destinationError.textContent = '';
-  getBestRouteDestinationAJAXRequest(event);
-  $directionsForm.reset();
-  toggleElement($directionsForm);
+  event.preventDefault();
+  getRoute(event);
 });
 
 $poisForm.addEventListener('submit', function (event) {
@@ -112,25 +108,19 @@ $poisForm.addEventListener('submit', function (event) {
     event.preventDefault();
     return;
   }
-  if (!data.latitude || !data.longitude) {
-    $radiusError.textContent = 'Please select a location on the map or use the geocoder tool to get a starting point!';
+  if (!$bufferAddress.validity.valid) {
+    showError($bufferAddress, $bufferAddressError);
     event.preventDefault();
     return;
   }
   event.preventDefault();
-  data.eventTarget = event.target.id;
   getPOIs(event);
-  $poisForm.reset();
-  toggleElement($poisForm);
 });
 
 // All input listeners
 
 $radius.addEventListener('input', event => {
-  if (!data.latitude || !data.longitude) {
-    $radiusError.textContent = 'Please select a location on the map or use the geocoder tool to get a starting point!';
-    event.preventDefault();
-  } else if ($radius.validity.valid) {
+  if ($radius.validity.valid) {
     $radiusError.textContent = '';
     $radiusError.className = 'error';
   } else {
@@ -138,11 +128,17 @@ $radius.addEventListener('input', event => {
   }
 });
 
+$bufferAddress.addEventListener('input', event => {
+  if ($bufferAddress.validity.valid) {
+    $bufferAddressError.textContent = '';
+    $bufferAddressError.className = 'error';
+  } else {
+    showError($bufferAddress, $bufferAddressError);
+  }
+});
+
 $start.addEventListener('input', event => {
-  if (!data.latitude || !data.longitude) {
-    $startError.textContent = 'Please select a location on the map or use the geocoder tool to get a starting point!';
-    event.preventDefault();
-  } else if ($start.validity.valid) {
+  if ($start.validity.valid) {
     $startError.textContent = '';
     $startError.classname = 'error';
   } else {
@@ -160,7 +156,6 @@ $destination.addEventListener('input', event => {
 });
 
 $reverseLat.addEventListener('input', event => {
-  data.latitude = event.target.value;
   if ($reverseLat.validity.valid) {
     $reverseLatError.textContent = '';
     $reverseLatError.classname = 'error';
@@ -188,6 +183,24 @@ $geocode.addEventListener('input', () => {
 });
 
 // show error function for all form inputs
+
+function checkResponseForError(response, errorElement) {
+  if (!$loaderContainer.classList.contains('hide')) {
+    $loaderContainer.classList.toggle('hide-loader-container');
+  }
+  if (response.error) {
+    errorElement.textContent = `${response.error.code}: ${response.error.message}`;
+    return;
+  }
+  if (response.code && response.message) {
+    errorElement.textContent = `${response.message}`;
+    return;
+  }
+  if (response.features.length < 1) {
+    errorElement.textContent = 'Sorry that didn\'t yield any results';
+  }
+}
+
 function showError(element, errorElement) {
   if (element.validity.rangeUnderflow || element.validity.rangeOverflow) {
     errorElement.textContent = `Must be at least ${element.min} and less than ${element.max}`;
@@ -210,25 +223,20 @@ function showError(element, errorElement) {
   }
 }
 
-function toggleElement(element) {
-  element.classList.toggle('show');
-  element.classList.toggle('hide');
-}
-
-function createPopupContent() {
+function createPopupContent(displayObject) {
   var popupDiv = document.createElement('div');
   popupDiv.setAttribute('class', 'popup-div');
   var address = document.createElement('p');
-  address.textContent = 'Address: ' + data.address;
+  address.textContent = 'Address: ' + displayObject.address;
   popupDiv.appendChild(address);
   var latitude = document.createElement('p');
-  latitude.textContent = 'Latitude: ' + data.latitude;
+  latitude.textContent = 'Latitude: ' + displayObject.latitude;
   popupDiv.appendChild(latitude);
   var longitude = document.createElement('p');
-  longitude.textContent = 'Longitude: ' + data.longitude;
+  longitude.textContent = 'Longitude: ' + displayObject.longitude;
   popupDiv.appendChild(longitude);
   var elevationData = document.createElement('p');
-  elevationData.textContent = 'Elevation: ' + data.elevation + ' meters';
+  elevationData.textContent = 'Elevation: ' + displayObject.elevation + ' meters';
   popupDiv.appendChild(elevationData);
   var buttonDiv = document.createElement('div');
   buttonDiv.setAttribute('class', 'button-div');
@@ -237,32 +245,31 @@ function createPopupContent() {
   directionsButton.setAttribute('class', 'popup-button');
   directionsButton.textContent = 'Directions';
   buttonDiv.appendChild(directionsButton);
+  directionsButton.addEventListener('click', function (event) {
+    $directionsForm.classList.toggle('show');
+    $start.value = displayObject.address;
+    $dropdownContainer.classList.toggle('show-dropdown-container');
+  });
   var poiButton = document.createElement('button');
   poiButton.setAttribute('id', 'poi-button');
   poiButton.setAttribute('class', 'popup-button');
   poiButton.textContent = 'POI';
   buttonDiv.appendChild(poiButton);
   popupDiv.appendChild(buttonDiv);
+  poiButton.addEventListener('click', function (event) {
+    $poisForm.classList.toggle('show');
+    $bufferAddress.value = displayObject.address;
+    $dropdownContainer.classList.toggle('show-dropdown-container');
+  });
   return popupDiv;
 }
 
-function displayPopupContent() {
-  markupLayer.clearLayers();
+function displayPopupContent(displayObject) {
   markupLayer.unbindPopup();
-  markupLayer.addData(data.geoJSON);
-  markupLayer.bindPopup(createPopupContent());
+  markupLayer.clearLayers();
+  markupLayer.addData(displayObject.geoJSON);
+  markupLayer.bindPopup(createPopupContent(displayObject));
   markupLayer.openPopup();
-  $directionsButtonOnThePopup = document.querySelector('#directions-button');
-  $poiButtonOnThePopup = document.querySelector('#poi-button');
-  $directionsButtonOnThePopup.addEventListener('click', function (event) {
-    toggleElement($directionsForm);
-    $dropdownContainer.classList.toggle('show-dropdown-container');
-    document.querySelector('#start').value = data.address;
-  });
-  $poiButtonOnThePopup.addEventListener('click', function (event) {
-    toggleElement($poisForm);
-    $dropdownContainer.classList.toggle('show-dropdown-container');
-  });
   map.setView(markupLayer.getLayers()[0]._latlng);
 }
 
@@ -279,46 +286,35 @@ function getOpenRoutesJSON(url, params, callback) {
   xhr.send();
 }
 
-function getGeocode(event, startCoordinates) {
+function getGeocode() {
   var submittedAddress = $geocodeForm.elements.address.value;
-  // data.eventTarget = event.target.id;
   $loaderContainer.classList.toggle('hide-loader-container');
   getOpenRoutesJSON('/geocode/search', { text: submittedAddress }, function (response) {
-    if (response.error || response.code) {
-      checkResponseForError(response, $geocodeForm, $geocodeError);
+    if (response.error || response.code || response.features.length < 1) {
+      checkResponseForError(response, $geocodeError);
       return;
     }
-    if (response.features.length < 1) {
-      $dropdownContainer.classList.toggle('show-dropdown-container');
+    var displayObject = {
+      latitude: response.features[0].geometry.coordinates[1],
+      longitude: response.features[0].geometry.coordinates[0],
+      address: response.features[0].properties.label,
+      geoJSON: response.features[0]
+    };
+    getOpenRoutesJSON('/elevation/point', { geometry: displayObject.longitude + ',' + displayObject.latitude }, function (response) {
+      if (response.error || response.code) {
+        checkResponseForError(response, $geocodeError);
+      }
+      displayObject.elevation = response.geometry.coordinates[2];
       $loaderContainer.classList.toggle('hide-loader-container');
-      toggleElement($geocodeForm);
-      $geocodeError.textContent = 'That address could not be found, please try changing the format or selecting a different address';
-      return;
-    }
-    data.latitude = response.features[0].geometry.coordinates[1];
-    data.longitude = response.features[0].geometry.coordinates[0];
-    data.address = response.features[0].properties.label;
-    data.geoJSON = response.features[0];
-    getElevationAJAXRequest($geocodeForm, $geocodeError);
-    $dropdownContainer.classList.toggle('show-dropdown-container');
-    $loaderContainer.classList.toggle('hide-loader-container');
-  });
-}
-
-function getElevationAJAXRequest(element, errorElement) {
-  getOpenRoutesJSON('/elevation/point', { geometry: data.longitude + ',' + data.latitude }, function (response) {
-    if (response.error || response.code) {
-      checkResponseForError(response, element, errorElement);
-      return;
-    }
-    data.elevation = response.geometry.coordinates[2];
-    displayPopupContent();
+      displayPopupContent(displayObject);
+      $geocodeForm.reset();
+      $geocodeForm.classList.toggle('show');
+    });
   });
 }
 
 function getReverseGeocode(event) {
   var submittedLatLng = [];
-  data.eventTarget = event.target.id;
   if (event.target.id === 'reverse-geocode-form') {
     submittedLatLng.push($reverseGeocodeForm.elements.latitude.value);
     submittedLatLng.push($reverseGeocodeForm.elements.longitude.value);
@@ -328,123 +324,194 @@ function getReverseGeocode(event) {
   }
   $loaderContainer.classList.toggle('hide-loader-container');
   getOpenRoutesJSON('/geocode/reverse', { 'point.lat': submittedLatLng[0], 'point.lon': submittedLatLng[1] }, function (response) {
-    data.latitude = response.features[0].geometry.coordinates[1];
-    data.longitude = response.features[0].geometry.coordinates[0];
-    data.address = response.features[0].properties.label;
-    data.geoJSON = response.features[0];
-    getElevationAJAXRequest($reverseGeocodeForm, $reverseLatError);
-    if (event.target.id !== 'map') {
-      $dropdownContainer.classList.toggle('show-dropdown-container');
+    if (response.error || response.code || response.features.length < 1) {
+      checkResponseForError(response, $reverseLatError);
+      return;
     }
-    $loaderContainer.classList.toggle('hide-loader-container');
+    var displayObject = {
+      latitude: response.features[0].geometry.coordinates[1],
+      longitude: response.features[0].geometry.coordinates[0],
+      address: response.features[0].properties.label,
+      geoJSON: response.features[0]
+    };
+    getOpenRoutesJSON('/elevation/point', { geometry: displayObject.longitude + ',' + displayObject.latitude }, function (response) {
+      if (event.target.id !== 'map') {
+        $dropdownContainer.classList.toggle('show-dropdown-container');
+      }
+      if (response.error || response.code) {
+        checkResponseForError(response, $reverseLatError);
+        return;
+      }
+      displayObject.elevation = response.geometry.coordinates[2];
+      $loaderContainer.classList.toggle('hide-loader-container');
+      displayPopupContent(displayObject);
+      $reverseGeocodeForm.reset();
+    });
   });
 }
 
-function checkResponseForError(response, element, errorElement) {
-  if (response.error) {
-    toggleElement(element);
-    errorElement.textContent = `${response.error.code}: ${response.error.message}`;
-
-  }
-  if (response.code && response.message) {
-    toggleElement(element);
-    errorElement.textContent = `${response.code}: ${response.message}`;
-  }
-}
-
-function getBestRouteDestinationAJAXRequest(event) {
-  data.eventTarget = event.target.id;
-  data.address = $directionsForm.elements.destination.value;
+function getRoute(event) {
   var startCoordinates = [];
-  if (!data.latitude || !data.longitude) {
-    getOpenRoutesJSON('/geocode/search', { text: $start.value }, function (response) {
-      if (response.error || response.code) {
-        checkResponseForError(response, $directionsForm, $startError);
-        $dropdownContainer.classList.toggle('show-dropdown-container');
-        return;
-      }
-      startCoordinates.push(response.features[0].geometry.coordinates[1]);
-      startCoordinates.push(response.features[0].geometry.coordinates[0]);
-    });
-  }
-  startCoordinates.push(data.latitude);
-  startCoordinates.push(data.longitude);
+  var start = event.currentTarget.start.value;
+  var destination = event.currentTarget.destination.value;
   $loaderContainer.classList.toggle('hide-loader-container');
-  getOpenRoutesJSON('/geocode/search', { text: data.address }, function (response) {
-    if (response.error || response.code) {
-      checkResponseForError(response, $directionsForm, $startError);
+  getOpenRoutesJSON('/geocode/search', { text: start }, function (response) {
+    if (response.error || response.code || response.features.length < 1) {
+      checkResponseForError(response, $startError);
       $dropdownContainer.classList.toggle('show-dropdown-container');
       return;
     }
-    var routeParameters = {
-      start: startCoordinates[1] + ',' + startCoordinates[0],
-      end: response.features[0].geometry.coordinates[0] + ',' + response.features[0].geometry.coordinates[1]
-    };
-    getOpenRoutesJSON('/v2/directions/driving-car', routeParameters, function (response) {
-      if (response.error || response.code) {
-        checkResponseForError(response, $directionsForm, $startError);
-        $loaderContainer.classList.toggle('hide-loader-container');
+    startCoordinates.push(response.features[0].geometry.coordinates[1]);
+    startCoordinates.push(response.features[0].geometry.coordinates[0]);
+    getOpenRoutesJSON('/geocode/search', { text: destination }, function (response) {
+      if (response.error || response.code || response.features.length < 1) {
+        // hande a click from the directions button popup that loads the popups current address
+        // also handle just clicking in and changing the value
+        checkResponseForError(response, $destinationError);
+        $dropdownContainer.classList.toggle('show-dropdown-container');
         return;
       }
-      markupLayer.closePopup();
-      markupLayer.clearLayers();
-      markupLayer.unbindPopup();
-      markupLayer.addData(response.features[0]);
-      map.fitBounds(markupLayer.getBounds());
-      var routeCoordinates = response.features[0].geometry.coordinates;
-      // eslint-disable-next-line no-undef
-      markupLayer.addData(L.marker([routeCoordinates[0][1], routeCoordinates[0][0]]).toGeoJSON());
-      // eslint-disable-next-line no-undef
-      markupLayer.addData(L.marker([routeCoordinates[routeCoordinates.length - 1][1], routeCoordinates[routeCoordinates.length - 1][0]]).toGeoJSON());
-      $loaderContainer.classList.toggle('hide-loader-container');
+      var routeParameters = {
+        start: startCoordinates[1] + ',' + startCoordinates[0],
+        end: response.features[0].geometry.coordinates[0] + ',' + response.features[0].geometry.coordinates[1]
+      };
+      getOpenRoutesJSON('/v2/directions/driving-car', routeParameters, function (response) {
+        if (response.error || response.code || response.features.length < 1) {
+          checkResponseForError(response, $startError);
+          $dropdownContainer.classList.toggle('show-dropdown-container');
+          return;
+        }
+        var steps = response.features[0].properties.segments[0].steps;
+        markupLayer.closePopup();
+        markupLayer.clearLayers();
+        markupLayer.unbindPopup();
+        markupLayer.addData(response.features[0]);
+        map.fitBounds(markupLayer.getBounds());
+        // var routeCoordinates = response.features[0].geometry.coordinates;
+        // eslint-disable-next-line no-undef
+        // markupLayer.addData(L.marker([routeCoordinates[0][1], routeCoordinates[0][0]]).toGeoJSON());
+        // eslint-disable-next-line no-undef
+        // markupLayer.addData(L.marker([routeCoordinates[routeCoordinates.length - 1][1], routeCoordinates[routeCoordinates.length - 1][0]]).toGeoJSON());
+        var totalTripStats = document.createElement('div');
+        totalTripStats.classList.add('instruction');
+        var totalTripTime = document.createElement('p');
+        totalTripTime.textContent = `Total trip time: ${Math.floor(response.features[0].properties.summary.duration / 60)} minutes`;
+        totalTripStats.appendChild(totalTripTime);
+        var totalTripDistance = document.createElement('p');
+        totalTripDistance.textContent = `Total trip distance: ${Math.floor(response.features[0].properties.summary.distance * 0.000621)} miles`;
+        totalTripStats.appendChild(totalTripDistance);
+        var instructionsElementsArray = [totalTripStats];
+        instructionsElementsArray = instructionsElementsArray.concat(steps.map((elem, idx) => {
+          var instructionDiv = document.createElement('div');
+          instructionDiv.classList.add('instruction');
+          var instruction = document.createElement('p');
+          instruction.textContent = `Step ${idx + 1}: ${elem.instruction}`;
+          instructionDiv.appendChild(instruction);
+          var distance = document.createElement('p');
+          distance.textContent = `Distance: ${Number(elem.distance * 0.000621).toFixed(2)} miles`;
+          instructionDiv.appendChild(distance);
+          var minutes = document.createElement('p');
+          minutes.textContent = `Travel time for this step: ${Number(elem.duration / 60).toFixed(2)} minutes`;
+          instructionDiv.appendChild(minutes);
+          instructionDiv.addEventListener('mouseenter', event => {
+            highlightLayer.addData({
+              type: 'LineString',
+              coordinates: response.features[0].geometry.coordinates.slice(steps[idx].way_points[0], steps[idx].way_points[1])
+            });
+          });
+          instructionDiv.addEventListener('mouseleave', event => {
+            highlightLayer.clearLayers();
+          });
+          return instructionDiv;
+        }));
+        $routeInstructions.replaceChildren(...instructionsElementsArray);
+        $loaderContainer.classList.toggle('hide-loader-container');
+        $directionsForm.reset();
+      });
+      $dropdownContainer.classList.toggle('show-dropdown-container');
     });
-    $dropdownContainer.classList.toggle('show-dropdown-container');
   });
 }
 
 function getPOIs(event) {
-  var bufferDistance;
-  data.eventTarget = event.target.id;
-  bufferDistance = event.target.elements.buffer.value;
-  var requestBody = {
-    request: 'pois',
-    geometry: {
-      geojson: {
-        type: 'Point',
-        coordinates: [data.longitude, data.latitude]
-      },
-      buffer: bufferDistance
+  var bufferDistance = event.target.elements.buffer.value;
+  var bufferAddress = event.target.elements['buffer-address'].value;
+  $loaderContainer.classList.toggle('hide-loader-container');
+  getOpenRoutesJSON('/geocode/search', { text: bufferAddress }, function (response) {
+    if (response.error || response.code || response.features.length < 1) {
+      checkResponseForError(response, $bufferAddressError);
+      $dropdownContainer.classList.toggle('show-dropdown-container');
+      return;
     }
-  };
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', 'https://api.openrouteservice.org/pois');
-  xhr.setRequestHeader('authorization', '5b3ce3597851110001cf62489e44bfb8d57d4a17b815aa9f855e19da');
-  xhr.setRequestHeader('content-type', 'application/json;charset=UTF-8');
-  xhr.responseType = 'json';
-  xhr.addEventListener('load', function () {
-    var poisArray = xhr.response.features;
-    var markersArray = [];
-    poisArray.forEach(element => {
-      // eslint-disable-next-line no-undef
-      var marker = L.marker([element.geometry.coordinates[1], element.geometry.coordinates[0]]);
-      var osmID = Object.keys(element.properties.category_ids);
-      var poiName;
-      if (element.properties.osm_tags) {
-        poiName = element.properties.osm_tags.name;
-      } else {
-        poiName = 'Name not found!';
+    map.setView([response.features[0].geometry.coordinates[1], response.features[0].geometry.coordinates[0]]);
+    var requestBody = {
+      request: 'pois',
+      geometry: {
+        geojson: {
+          type: 'Point',
+          coordinates: [response.features[0].geometry.coordinates[0], response.features[0].geometry.coordinates[1]]
+        },
+        buffer: bufferDistance
       }
-      marker.bindPopup(`
-        <p>POI category: ${element.properties.category_ids[osmID[0]].category_name}</p>
+    };
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://api.openrouteservice.org/pois');
+    xhr.setRequestHeader('authorization', '5b3ce3597851110001cf62489e44bfb8d57d4a17b815aa9f855e19da');
+    xhr.setRequestHeader('content-type', 'application/json;charset=UTF-8');
+    xhr.responseType = 'json';
+    xhr.addEventListener('load', function () {
+      markupLayer.closePopup();
+      markupLayer.unbindPopup();
+      markupLayer.clearLayers();
+      var poisArray = xhr.response.features;
+      var markersArray = [];
+      // This acts as the first item in results list, showing total results
+      var poiSummary = document.createElement('div');
+      poiSummary.classList.add('poi-result');
+      var poiStats = document.createElement('p');
+      poiStats.textContent = `Found ${poisArray.length} results`;
+      poiSummary.appendChild(poiStats);
+      var poiElementsArray = [poiSummary];
+      // creating an array of dom elements to append to bottom of poi form
+      poiElementsArray = poiElementsArray.concat(poisArray.map(element => {
+        // eslint-disable-next-line no-undef
+        var marker = L.marker([element.geometry.coordinates[1], element.geometry.coordinates[0]]);
+        var osmID = Object.keys(element.properties.category_ids);
+        var poiName;
+        if (element.properties.osm_tags?.name) {
+          poiName = element.properties.osm_tags.name.toUpperCase();
+        } else {
+          poiName = 'Name not found!';
+        }
+        marker.bindPopup(`
+        <p>POI category: ${element.properties.category_ids[osmID[0]].category_name.toUpperCase()}</p>
         <p>Name: ${poiName}</p>
       `);
-      markersArray.push(marker);
+        markersArray.push(marker);
+        var poiDiv = document.createElement('div');
+        poiDiv.classList.add('poi-result');
+        var poiCategory = document.createElement('p');
+        poiCategory.textContent = element.properties.category_ids[osmID[0]].category_name.toUpperCase();
+        poiDiv.appendChild(poiCategory);
+        var nameOfPOI = document.createElement('p');
+        nameOfPOI.textContent = poiName;
+        poiDiv.appendChild(nameOfPOI);
+        poiDiv.addEventListener('mouseenter', event => {
+          marker.openPopup();
+        });
+        poiDiv.addEventListener('mouseleave', event => {
+          marker.closePopup();
+        });
+        return poiDiv;
+      }));
+      $poiResults.replaceChildren(...poiElementsArray);
+      // eslint-disable-next-line no-undef
+      var layerGroup = L.layerGroup(markersArray);
+      layerGroup.addTo(markupLayer);
+      $loaderContainer.classList.toggle('hide-loader-container');
+      $poisForm.reset();
     });
-    // eslint-disable-next-line no-undef
-    var layerGroup = L.layerGroup(markersArray);
-    layerGroup.addTo(markupLayer);
-    $loaderContainer.classList.toggle('hide-loader-container');
+    xhr.send(JSON.stringify(requestBody));
   });
-  xhr.send(JSON.stringify(requestBody));
-  $loaderContainer.classList.toggle('hide-loader-container');
+
 }

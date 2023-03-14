@@ -37,7 +37,7 @@
         <p class="roboto-font">Geocode</p>
         <i class="fa-solid fa-angle-down fa-xl cursor"></i>
       </div>
-      <form novalidate action="" class="hide" id="geocode-form">
+      <form novalidate action="" class="" id="geocode-form">
         <div class="row justify-between bottom-margin padding-0">
           <label for="address">Address:</label>
           <input required name="address" type="text" minlength="4" maxlength="50" id="geocode-address" placeholder="Type An Address">
@@ -52,7 +52,7 @@
         <p class="roboto-font">Reverse Geocode</p>
         <i class="fa-solid fa-angle-down fa-xl cursor"></i>
       </div>
-      <form novalidate action="" class="hide" id="reverse-geocode-form">
+      <form novalidate action="" class="" id="reverse-geocode-form">
         <div class="row justify-between bottom-margin padding-0">
           <label for="latitude">Latitude:</label>
           <input required name="latitude" type="number" min="-90" max="90" step="any" id="latitude" placeholder="Latitude">
@@ -72,7 +72,7 @@
         <p class="roboto-font">Get Best Route</p>
         <i class="fa-solid fa-angle-down fa-xl cursor"></i>
       </div>
-      <form novalidate action="" class="hide" id="directions-form">
+      <form novalidate action="" class="" id="directions-form">
         <div class="row justify-between bottom-margin padding-0">
           <label for="start">Start:</label>
           <input required name="start" type="text" minlength="4" maxlength="50" id="start" placeholder="Type an address">
@@ -86,21 +86,28 @@
         <div class="form-actions row justify-end padding-0">
           <button type="submit" class="directions-button cursor">Get Directions</button>
         </div>
+        <div id="route-instructions"></div>
       </form>
       <!--POIs menu-->
       <div id="pois-menu" class="row justify-between gray-background align-items bottom-border">
         <p class="roboto-font">Get POIs</p>
         <i class="fa-solid fa-angle-down fa-xl cursor"></i>
       </div>
-      <form novalidate class="hide" id="pois-form">
+      <form novalidate class="" id="pois-form">
         <div class="row justify-between bottom-margin padding-0">
-          <label for="radius">Search Radius (meters):</label>
+          <label for="buffer">Search Radius (meters):</label>
           <input required name="radius" type="number" id="buffer" min="1" max="1999" placeholder="i.e. 200">
+          <span class="error"></span>
+        </div>
+        <div class="row justify-between bottom-margin padding-0">
+          <label for="buffer-address">Radius Address:</label>
+          <input required name="buffer-address" type="text" minlength="4" maxlength="50" id="buffer-address" placeholder="Type An Address">
           <span class="error"></span>
         </div>
         <div class="form-actions row justify-end padding-0">
           <button type="submit" class="directions-button cursor">Get POIs</button>
         </div>
+        <div id="pois-results"></div>
       </form>
     </div>
   </main>
