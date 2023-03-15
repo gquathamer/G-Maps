@@ -126,6 +126,10 @@ body,
   span.error {
     text-align: right;
   }
+
+  .button-div button {
+    width: 25%;
+  }
 }
 
 @media screen and (max-height: 720px) {
