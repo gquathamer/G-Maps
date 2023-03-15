@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>AJAX Project</title>
-  <link rel="icon" href="images/favicon.ico">
+  <title>G-Maps</title>
+  <link rel="icon" href="images/favicon.svg">
   <link rel="stylesheet" href="css/reset.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/styles.css">
@@ -22,9 +22,9 @@
 
 <body class="relative">
   <header class="container row navbar">
-    <h1 class="white-text">Travel App</h1>
+    <h1 class="white-text">G-Maps</h1>
     <div class="bar-container">
-      <i class="fa-solid fa-bars fa-2xl white-text"></i>
+      <i class="fa-solid fa-bars fa-2xl"></i>
     </div>
   </header>
   <main class="container height-90 relative">
@@ -43,11 +43,11 @@
           <input required name="address" type="text" minlength="4" maxlength="50" id="geocode-address" placeholder="Type An Address">
           <span class="error"></span>
         </div>
-        <div class="form-actions row justify-end padding-0">
-          <button type="submit">Send</button>
+        <div class="button-div row justify-end padding-0">
+          <button type="submit">Geocode</button>
         </div>
       </form>
-      <!--Reverse geocode mene-->
+      <!--Reverse geocode menu-->
       <div id="reverse-geocode-menu" class="row justify-between gray-background align-items bottom-border ">
         <p class="roboto-font">Reverse Geocode</p>
         <i class="fa-solid fa-angle-down fa-xl"></i>
@@ -63,13 +63,13 @@
           <input required name="longitude" type="number" min="-180" max="180" step="any" id="longitude" placeholder="Longitude">
           <span class="error"></span>
         </div>
-        <div class="form-actions row justify-end padding-0">
-          <button type="submit" class="submit">Send</button>
+        <div class="button-div row justify-end padding-0">
+          <button type="submit">Reverse</button>
         </div>
       </form>
       <!--Directions menu-->
       <div id="directions-menu" class="row justify-between gray-background align-items bottom-border">
-        <p class="roboto-font">Get Best Route</p>
+        <p class="roboto-font">Directions</p>
         <i class="fa-solid fa-angle-down fa-xl"></i>
       </div>
       <form novalidate action="" class="" id="directions-form">
@@ -83,14 +83,14 @@
           <input required name="destination" type="text" minlength="4" maxlength="50" id="destination" placeholder="Type An Address">
           <span class="error"></span>
         </div>
-        <div class="form-actions row justify-end padding-0">
-          <button type="submit" class="directions-button">Get Directions</button>
+        <div class="button-div row justify-end padding-0">
+          <button type="submit" class="directions-button">Directions</button>
         </div>
         <div id="route-instructions"></div>
       </form>
       <!--POIs menu-->
       <div id="pois-menu" class="row justify-between gray-background align-items bottom-border">
-        <p class="roboto-font">Get POIs</p>
+        <p class="roboto-font">POIs</p>
         <i class="fa-solid fa-angle-down fa-xl"></i>
       </div>
       <form novalidate class="" id="pois-form">
@@ -104,8 +104,8 @@
           <input required name="buffer-address" type="text" minlength="4" maxlength="50" id="buffer-address" placeholder="Type An Address">
           <span class="error"></span>
         </div>
-        <div class="form-actions row justify-end padding-0">
-          <button type="submit" class="directions-button">Get POIs</button>
+        <div class="button-div row justify-end padding-0">
+          <button type="submit" class="directions-button">POIs</button>
         </div>
         <div id="pois-results"></div>
       </form>

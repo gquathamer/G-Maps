@@ -15,10 +15,22 @@ label {
   padding: 0.5rem 0;
 }
 
+button {
+  background-color: rgb(93, 208, 103);
+  border-radius: 1rem;
+  padding: 0.5rem;
+  width: 40%;
+}
+
 input {
   background-color: rgba(182, 182, 182, 0.75);
   padding: 0.5rem;
   width: 100%;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: none;
 }
 
 input:invalid {
@@ -29,16 +41,17 @@ input:focus:invalid {
   outline: none;
 }
 
-button {
-  background-color: #5fd068;
-  border-radius: 10px;
-  padding: 0.25rem;
-  width: 40%;
-}
-
 button:hover,
 i:hover {
   cursor: pointer;
+}
+
+button:hover {
+  background-color: rgba(93, 208, 103, 0.75);
+}
+
+i:hover {
+  color: rgba(0, 0, 0, 0.5);
 }
 
 .show {
@@ -110,9 +123,11 @@ i:hover {
 }
 
 .bar-container {
-  border-radius: 10px;
-  border: white solid 2px;
   padding: 0.5rem;
+}
+
+.bar-container i {
+  color: white;
 }
 
 .navbar {
@@ -131,6 +146,10 @@ i:hover {
 
 .button-div {
   display: flex;
+  justify-content: end;
+}
+
+.popup-div .button-div {
   justify-content: space-around;
 }
 
@@ -169,7 +188,7 @@ i:hover {
 
 .loader {
   border: 16px solid #f3f3f3;
-  border-top: 16px solid #3498db;
+  border-top: 16px solid #4b8673;
   border-radius: 100%;
   width: 6rem;
   height: 6rem;
