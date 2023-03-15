@@ -36,14 +36,6 @@ body,
   padding: 0;
 }
 
-.justify-center {
-  justify-content: start;
-}
-
-#geocode-desktop-form {
-  display: none;
-}
-
 .dropdown-container {
   position: absolute;
   top: -1000px;
@@ -63,6 +55,15 @@ body,
 }
 
 @media screen and (min-width: 576px) {
+  div.button-div {
+    justify-content: end;
+  }
+
+  .button-div button {
+    width: 33%;
+    justify-content: end;
+  }
+
   .column-third {
     flex-basis: calc(100% / 3);
   }
@@ -81,10 +82,6 @@ body,
 
   .justify-center {
     justify-content: center;
-  }
-
-  #geocode-desktop-form {
-    display: block;
   }
 
   .bar-container {
@@ -125,8 +122,15 @@ body,
   }
 }
 
-@media screen and (min-width: 1896px) {
+@media screen and (min-width: 1280px) {
   span.error {
     text-align: right;
+  }
+}
+
+@media screen and (max-height: 720px) {
+  h1 {
+    font-size: 1rem;
+    margin: 0;
   }
 }

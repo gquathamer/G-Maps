@@ -66,6 +66,7 @@ $geocodeForm.addEventListener('submit', function (event) {
     event.preventDefault();
     return;
   }
+  $geocodeError.textContent = '';
   event.preventDefault();
   getGeocode();
 });
@@ -81,6 +82,7 @@ $reverseGeocodeForm.addEventListener('submit', function (event) {
     event.preventDefault();
     return;
   }
+  $reverseLatError.textContent = '';
   event.preventDefault();
   getReverseGeocode(event);
 });
@@ -113,6 +115,7 @@ $poisForm.addEventListener('submit', function (event) {
     event.preventDefault();
     return;
   }
+  $radiusError.textContent = '';
   event.preventDefault();
   getPOIs(event);
 });
@@ -185,7 +188,7 @@ $geocode.addEventListener('input', () => {
 // show error function for all form inputs
 
 function checkResponseForError(response, errorElement) {
-  if (!$loaderContainer.classList.contains('hide')) {
+  if (!$loaderContainer.classList.contains('hide-loader-container')) {
     $loaderContainer.classList.toggle('hide-loader-container');
   }
   if (response.error) {
@@ -196,8 +199,12 @@ function checkResponseForError(response, errorElement) {
     errorElement.textContent = `${response.message}`;
     return;
   }
-  if (response.features.length < 1) {
+  if (response.features && response.features.length < 1) {
     errorElement.textContent = 'Sorry that didn\'t yield any results';
+    return;
+  }
+  if (response.type && response.type === 'error') {
+    errorElement.textContent = 'Sorry there was an unexpected error. Check your connection and try again!';
   }
 }
 
@@ -246,7 +253,7 @@ function createPopupContent(displayObject) {
   directionsButton.textContent = 'Directions';
   buttonDiv.appendChild(directionsButton);
   directionsButton.addEventListener('click', function (event) {
-    $directionsForm.classList.toggle('show');
+    $directionsForm.classList.add('show');
     $start.value = displayObject.address;
     $dropdownContainer.classList.toggle('show-dropdown-container');
   });
@@ -257,7 +264,7 @@ function createPopupContent(displayObject) {
   buttonDiv.appendChild(poiButton);
   popupDiv.appendChild(buttonDiv);
   poiButton.addEventListener('click', function (event) {
-    $poisForm.classList.toggle('show');
+    $poisForm.classList.add('show');
     $bufferAddress.value = displayObject.address;
     $dropdownContainer.classList.toggle('show-dropdown-container');
   });
@@ -283,6 +290,9 @@ function getOpenRoutesJSON(url, params, callback) {
   xhr.addEventListener('load', function () {
     callback(xhr.response);
   });
+  xhr.addEventListener('error', function (event) {
+    callback(event);
+  });
   xhr.send();
 }
 
@@ -290,6 +300,10 @@ function getGeocode() {
   var submittedAddress = $geocodeForm.elements.address.value;
   $loaderContainer.classList.toggle('hide-loader-container');
   getOpenRoutesJSON('/geocode/search', { text: submittedAddress }, function (response) {
+    if (response.type && response.type === 'error') {
+      checkResponseForError(response, $geocodeError);
+      return;
+    }
     if (response.error || response.code || response.features.length < 1) {
       checkResponseForError(response, $geocodeError);
       return;
@@ -301,21 +315,27 @@ function getGeocode() {
       geoJSON: response.features[0]
     };
     getOpenRoutesJSON('/elevation/point', { geometry: displayObject.longitude + ',' + displayObject.latitude }, function (response) {
+      if (response.type && response.type === 'error') {
+        checkResponseForError(response, $geocodeError);
+        return;
+      }
       if (response.error || response.code) {
         checkResponseForError(response, $geocodeError);
+        return;
       }
       displayObject.elevation = response.geometry.coordinates[2];
       $loaderContainer.classList.toggle('hide-loader-container');
       displayPopupContent(displayObject);
+      $dropdownContainer.classList.toggle('show-dropdown-container');
       $geocodeForm.reset();
-      $geocodeForm.classList.toggle('show');
     });
   });
 }
 
 function getReverseGeocode(event) {
   var submittedLatLng = [];
-  if (event.target.id === 'reverse-geocode-form') {
+  var eventOrigin = event.target.id;
+  if (eventOrigin === 'reverse-geocode-form') {
     submittedLatLng.push($reverseGeocodeForm.elements.latitude.value);
     submittedLatLng.push($reverseGeocodeForm.elements.longitude.value);
   } else {
@@ -324,6 +344,14 @@ function getReverseGeocode(event) {
   }
   $loaderContainer.classList.toggle('hide-loader-container');
   getOpenRoutesJSON('/geocode/reverse', { 'point.lat': submittedLatLng[0], 'point.lon': submittedLatLng[1] }, function (response) {
+    if (response.type && response.type === 'error') {
+      checkResponseForError(response, $reverseLatError);
+      if (eventOrigin === 'map') {
+        $dropdownContainer.classList.toggle('show-dropdown-container');
+        $reverseGeocodeForm.classList.add('show');
+      }
+      return;
+    }
     if (response.error || response.code || response.features.length < 1) {
       checkResponseForError(response, $reverseLatError);
       return;
@@ -335,12 +363,16 @@ function getReverseGeocode(event) {
       geoJSON: response.features[0]
     };
     getOpenRoutesJSON('/elevation/point', { geometry: displayObject.longitude + ',' + displayObject.latitude }, function (response) {
-      if (event.target.id !== 'map') {
-        $dropdownContainer.classList.toggle('show-dropdown-container');
+      if (response.type && response.type === 'error') {
+        checkResponseForError(response, $reverseLatError);
+        return;
       }
       if (response.error || response.code) {
         checkResponseForError(response, $reverseLatError);
         return;
+      }
+      if (eventOrigin === 'reverse-geocode-form') {
+        $dropdownContainer.classList.toggle('show-dropdown-container');
       }
       displayObject.elevation = response.geometry.coordinates[2];
       $loaderContainer.classList.toggle('hide-loader-container');
@@ -356,19 +388,23 @@ function getRoute(event) {
   var destination = event.currentTarget.destination.value;
   $loaderContainer.classList.toggle('hide-loader-container');
   getOpenRoutesJSON('/geocode/search', { text: start }, function (response) {
+    if (response.type && response.type === 'error') {
+      checkResponseForError(response, $startError);
+      return;
+    }
     if (response.error || response.code || response.features.length < 1) {
       checkResponseForError(response, $startError);
-      $dropdownContainer.classList.toggle('show-dropdown-container');
       return;
     }
     startCoordinates.push(response.features[0].geometry.coordinates[1]);
     startCoordinates.push(response.features[0].geometry.coordinates[0]);
     getOpenRoutesJSON('/geocode/search', { text: destination }, function (response) {
-      if (response.error || response.code || response.features.length < 1) {
-        // hande a click from the directions button popup that loads the popups current address
-        // also handle just clicking in and changing the value
+      if (response.type && response.type === 'error') {
         checkResponseForError(response, $destinationError);
-        $dropdownContainer.classList.toggle('show-dropdown-container');
+        return;
+      }
+      if (response.error || response.code || response.features.length < 1) {
+        checkResponseForError(response, $destinationError);
         return;
       }
       var routeParameters = {
@@ -376,9 +412,12 @@ function getRoute(event) {
         end: response.features[0].geometry.coordinates[0] + ',' + response.features[0].geometry.coordinates[1]
       };
       getOpenRoutesJSON('/v2/directions/driving-car', routeParameters, function (response) {
+        if (response.type && response.type === 'error') {
+          checkResponseForError(response, $startError);
+          return;
+        }
         if (response.error || response.code || response.features.length < 1) {
           checkResponseForError(response, $startError);
-          $dropdownContainer.classList.toggle('show-dropdown-container');
           return;
         }
         var steps = response.features[0].properties.segments[0].steps;
@@ -387,11 +426,6 @@ function getRoute(event) {
         markupLayer.unbindPopup();
         markupLayer.addData(response.features[0]);
         map.fitBounds(markupLayer.getBounds());
-        // var routeCoordinates = response.features[0].geometry.coordinates;
-        // eslint-disable-next-line no-undef
-        // markupLayer.addData(L.marker([routeCoordinates[0][1], routeCoordinates[0][0]]).toGeoJSON());
-        // eslint-disable-next-line no-undef
-        // markupLayer.addData(L.marker([routeCoordinates[routeCoordinates.length - 1][1], routeCoordinates[routeCoordinates.length - 1][0]]).toGeoJSON());
         var totalTripStats = document.createElement('div');
         totalTripStats.classList.add('instruction');
         var totalTripTime = document.createElement('p');
@@ -426,9 +460,9 @@ function getRoute(event) {
         }));
         $routeInstructions.replaceChildren(...instructionsElementsArray);
         $loaderContainer.classList.toggle('hide-loader-container');
+        $dropdownContainer.classList.toggle('show-dropdown-container');
         $directionsForm.reset();
       });
-      $dropdownContainer.classList.toggle('show-dropdown-container');
     });
   });
 }
@@ -438,9 +472,12 @@ function getPOIs(event) {
   var bufferAddress = event.target.elements['buffer-address'].value;
   $loaderContainer.classList.toggle('hide-loader-container');
   getOpenRoutesJSON('/geocode/search', { text: bufferAddress }, function (response) {
+    if (response.type && response.type === 'error') {
+      checkResponseForError(response, $bufferAddressError);
+      return;
+    }
     if (response.error || response.code || response.features.length < 1) {
       checkResponseForError(response, $bufferAddressError);
-      $dropdownContainer.classList.toggle('show-dropdown-container');
       return;
     }
     map.setView([response.features[0].geometry.coordinates[1], response.features[0].geometry.coordinates[0]]);
@@ -465,14 +502,12 @@ function getPOIs(event) {
       markupLayer.clearLayers();
       var poisArray = xhr.response.features;
       var markersArray = [];
-      // This acts as the first item in results list, showing total results
       var poiSummary = document.createElement('div');
       poiSummary.classList.add('poi-result');
       var poiStats = document.createElement('p');
       poiStats.textContent = `Found ${poisArray.length} results`;
       poiSummary.appendChild(poiStats);
       var poiElementsArray = [poiSummary];
-      // creating an array of dom elements to append to bottom of poi form
       poiElementsArray = poiElementsArray.concat(poisArray.map(element => {
         // eslint-disable-next-line no-undef
         var marker = L.marker([element.geometry.coordinates[1], element.geometry.coordinates[0]]);
@@ -509,7 +544,13 @@ function getPOIs(event) {
       var layerGroup = L.layerGroup(markersArray);
       layerGroup.addTo(markupLayer);
       $loaderContainer.classList.toggle('hide-loader-container');
+      $dropdownContainer.classList.toggle('show-dropdown-container');
       $poisForm.reset();
+    });
+    xhr.addEventListener('error', function (event) {
+      if (response.type && response.type === 'error') {
+        checkResponseForError(response, $geocodeError);
+      }
     });
     xhr.send(JSON.stringify(requestBody));
   });
