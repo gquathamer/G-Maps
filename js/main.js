@@ -38,6 +38,7 @@ var $routeInstructions = document.querySelector('#route-instructions');
 var $poiResults = document.querySelector('#pois-results');
 
 map.addEventListener('click', function (event) {
+  $reverseLatError.textContent = '';
   event.target.id = 'map';
   getReverseGeocode(event);
 });

@@ -59,11 +59,12 @@ body,
     justify-content: end;
   }
 
-  .button-div button {
-    width: 33%;
-    justify-content: end;
+  form button {
+    width: 15%;
   }
+}
 
+@media screen and (min-width: 768px) {
   .column-third {
     flex-basis: calc(100% / 3);
   }
@@ -120,15 +121,15 @@ body,
     flex-basis: 100%;
     max-width: 300px;
   }
+
+  form button {
+    width: 35%;
+  }
 }
 
 @media screen and (min-width: 1280px) {
-  span.error {
-    text-align: right;
-  }
-
-  .button-div button {
-    width: 25%;
+  form button {
+    width: 20%;
   }
 }
 
