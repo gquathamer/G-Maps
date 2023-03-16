@@ -19,7 +19,7 @@ button {
   background-color: rgb(93, 208, 103);
   border-radius: 1rem;
   padding: 0.5rem;
-  width: 40%;
+  width: 33%;
 }
 
 input {
@@ -151,6 +151,10 @@ i:hover {
 
 .popup-div .button-div {
   justify-content: space-around;
+}
+
+.popup-div button {
+  width: 33%;
 }
 
 .instruction,
