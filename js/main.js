@@ -1,13 +1,9 @@
-// eslint-disable-next-line no-undef
 var map = L.map('map').setView([39.717449, -105.089117], 13);
-// eslint-disable-next-line no-undef
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '© OpenStreetMap'
 }).addTo(map);
-// eslint-disable-next-line no-undef
 var markupLayer = L.geoJSON().addTo(map);
-// eslint-disable-next-line no-undef
 var highlightLayer = L.geoJSON(null, {
   style: function () {
     return { color: 'red' };
@@ -58,8 +54,6 @@ $dropdownContainer.addEventListener('click', function (event) {
     $poisForm.classList.toggle('show');
   }
 });
-
-// All form listeners
 
 $geocodeForm.addEventListener('submit', function (event) {
   if (!$geocode.validity.valid) {
@@ -120,8 +114,6 @@ $poisForm.addEventListener('submit', function (event) {
   event.preventDefault();
   getPOIs(event);
 });
-
-// All input listeners
 
 $radius.addEventListener('input', event => {
   if ($radius.validity.valid) {
@@ -185,8 +177,6 @@ $geocode.addEventListener('input', () => {
     showError($geocode, $geocodeError);
   }
 });
-
-// show error function for all form inputs
 
 function checkResponseForError(response, errorElement) {
   if (!$loaderContainer.classList.contains('hide-loader-container')) {
@@ -298,7 +288,7 @@ function getOpenRoutesJSON(url, params, callback) {
 }
 
 function getGeocode() {
-  var submittedAddress = $geocodeForm.elements.address.value;
+  var submittedAddress = $geocodeForm.elements['geocode-address'].value;
   $loaderContainer.classList.toggle('hide-loader-container');
   getOpenRoutesJSON('/geocode/search', { text: submittedAddress }, function (response) {
     if (response.type && response.type === 'error') {
@@ -510,7 +500,6 @@ function getPOIs(event) {
       poiSummary.appendChild(poiStats);
       var poiElementsArray = [poiSummary];
       poiElementsArray = poiElementsArray.concat(poisArray.map(element => {
-        // eslint-disable-next-line no-undef
         var marker = L.marker([element.geometry.coordinates[1], element.geometry.coordinates[0]]);
         var osmID = Object.keys(element.properties.category_ids);
         var poiName;
@@ -541,7 +530,6 @@ function getPOIs(event) {
         return poiDiv;
       }));
       $poiResults.replaceChildren(...poiElementsArray);
-      // eslint-disable-next-line no-undef
       var layerGroup = L.layerGroup(markersArray);
       layerGroup.addTo(markupLayer);
       $loaderContainer.classList.toggle('hide-loader-container');

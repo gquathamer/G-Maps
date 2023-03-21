@@ -17,6 +17,10 @@ label {
 
 button {
   background-color: rgb(93, 208, 103);
+  font-family:
+    roboto,
+    "open sans",
+    sans-serif;
   border-radius: 1rem;
   padding: 0.5rem;
   width: 33%;
@@ -54,16 +58,12 @@ i:hover {
   color: rgba(0, 0, 0, 0.5);
 }
 
+.silly-test {
+  font-size: 1.25rem;
+}
+
 .show {
   display: block;
-}
-
-.hide {
-  display: none;
-}
-
-.dark-green-background {
-  background-color: #4b8673;
 }
 
 .gray-background {
@@ -86,20 +86,12 @@ i:hover {
   justify-content: end;
 }
 
-.justify-center {
-  justify-content: start;
-}
-
 .align-items {
   align-items: center;
 }
 
 .height-90 {
   height: 90%;
-}
-
-.height-10 {
-  height: 10%;
 }
 
 .bottom-border {
@@ -155,6 +147,7 @@ i:hover {
 
 .popup-div button {
   width: 40%;
+  font-size: 0.75rem;
 }
 
 .instruction,
