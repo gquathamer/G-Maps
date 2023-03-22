@@ -8,7 +8,7 @@ I enjoy working with spatial data and web maps, and I wanted to build a simple a
 
 ## Live Demo
 
-See it live here:  [G-Maps](https://gquathamer.github.io/ajax-project/)
+See it live here:  [G-Maps](https://gquathamer.github.io/G-Maps/)
 
 ## Technologies Used
 
