@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta property="og:title" content="G-Maps">
+  <meta property="og:type" content="website" />
+  <meta property="og:description" content="A web-map for curious travelers">
+  <meta property="og:image" content="./gifs/Screenshot.png">
+  <meta property="og:url" content="https://gquathamer.github.io/G-Maps/">
+  <meta name="twitter:card" content="./gifs/Screenshot.png">
   <title>G-Maps</title>
   <link rel="icon" href="images/favicon.svg">
   <link rel="stylesheet" href="css/reset.css">
@@ -34,13 +40,13 @@
     <div class="dropdown-container row column-wrap column">
       <!--Geocode menu-->
       <div id="geocode-menu" class="row justify-between gray-background align-items bottom-border">
-        <p class="roboto-font">Geocode</p>
+        <p>Geocode</p>
         <i class="fa-solid fa-angle-down fa-xl"></i>
       </div>
-      <form novalidate action="" class="" id="geocode-form">
+      <form novalidate id="geocode-form">
         <div class="row justify-between bottom-margin padding-0">
-          <label for="address">Address:</label>
-          <input required name="address" type="text" minlength="4" maxlength="50" id="geocode-address" placeholder="Type An Address">
+          <label for="geocode-address">Address:</label>
+          <input required name="geocode-address" type="text" minlength="4" maxlength="50" id="geocode-address" placeholder="Type An Address">
           <span class="error"></span>
         </div>
         <div class="button-div row justify-end padding-0">
@@ -49,10 +55,10 @@
       </form>
       <!--Reverse geocode menu-->
       <div id="reverse-geocode-menu" class="row justify-between gray-background align-items bottom-border ">
-        <p class="roboto-font">Reverse Geocode</p>
+        <p>Reverse Geocode</p>
         <i class="fa-solid fa-angle-down fa-xl"></i>
       </div>
-      <form novalidate action="" class="" id="reverse-geocode-form">
+      <form novalidate id="reverse-geocode-form">
         <div class="row justify-between bottom-margin padding-0">
           <label for="latitude">Latitude:</label>
           <input required name="latitude" type="number" min="-90" max="90" step="any" id="latitude" placeholder="Latitude">
@@ -69,10 +75,10 @@
       </form>
       <!--Directions menu-->
       <div id="directions-menu" class="row justify-between gray-background align-items bottom-border">
-        <p class="roboto-font">Directions</p>
+        <p>Directions</p>
         <i class="fa-solid fa-angle-down fa-xl"></i>
       </div>
-      <form novalidate action="" class="" id="directions-form">
+      <form novalidate id="directions-form">
         <div class="row justify-between bottom-margin padding-0">
           <label for="start">Start:</label>
           <input required name="start" type="text" minlength="4" maxlength="50" id="start" placeholder="Type an address">
@@ -90,10 +96,10 @@
       </form>
       <!--POIs menu-->
       <div id="pois-menu" class="row justify-between gray-background align-items bottom-border">
-        <p class="roboto-font">POIs</p>
+        <p>POIs</p>
         <i class="fa-solid fa-angle-down fa-xl"></i>
       </div>
-      <form novalidate class="" id="pois-form">
+      <form novalidate id="pois-form">
         <div class="row justify-between bottom-margin padding-0">
           <label for="buffer">Search Radius (meters):</label>
           <input required name="radius" type="number" id="buffer" min="1" max="1999" placeholder="i.e. 200">
@@ -114,8 +120,6 @@
   <div class="loader-container hide-loader-container">
     <div class="loader"></div>
   </div>
-  <script src="js/data.js" type="module"></script>
-  <script src="js/validation.js" type="module"></script>
   <script src="js/main.js" type="module"></script>
 </body>
 </html>
